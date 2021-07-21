@@ -1,11 +1,15 @@
 pub mod font;
 pub use self::font::Font;
+pub mod instruction;
+pub use self::instruction::Instruction;
 pub mod interpreter;
 pub use self::interpreter::Interpreter;
 pub mod keypad;
 pub use self::keypad::Keypad;
 pub mod memory;
 pub use self::memory::Memory;
+pub mod program_counter;
+pub use self::program_counter::ProgramCounter;
 pub mod random;
 pub use self::random::Random;
 pub mod renderer;
