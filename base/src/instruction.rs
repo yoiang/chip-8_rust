@@ -1,4 +1,4 @@
-use std::convert::TryInto;
+use std::{convert::TryInto, fmt::{self, Display}};
 
 pub struct Instruction {
     first: u8,
@@ -78,3 +78,77 @@ impl chip8_traits::Instruction for Instruction {
         result
     }
 }
+
+impl fmt::Display for Instruction {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:02X}{:02X}", self.first, self.second)
+    }
+}
+
+// TODO: add optional context String
+#[derive(Debug, Clone)]
+pub enum InstructionError<Instruction: chip8_traits::Instruction> {
+    UnsupportedInstructionError(Instruction),
+    InstructionExecuteError(Instruction),
+}
+
+impl<Instruction: chip8_traits::Instruction> fmt::Display for InstructionError<Instruction> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            InstructionError::InstructionExecuteError(instruction) => write!(f, "Issue when executing instruction '{}'", instruction),
+            InstructionError::UnsupportedInstructionError(instruction) => write!(f, "Unsupported instruction '{}'", instruction)
+        }
+        
+    }
+}
+
+/*
+pub trait InstructionError<Instruction: chip8_traits::Instruction>: Display {
+    fn instruction() -> Instruction;
+}
+
+#[derive(Debug, Clone)]
+pub struct UnsupportedInstructionError<Instruction: chip8_traits::Instruction> {
+    instruction: Instruction
+}
+
+impl<Instruction: chip8_traits::Instruction> InstructionError<Instruction> for UnsupportedInstructionError<Instruction> { 
+    
+}
+
+impl<Instruction: chip8_traits::Instruction> UnsupportedInstructionError<Instruction> {
+    pub fn new(instruction: Instruction) -> UnsupportedInstructionError<Instruction> {
+        UnsupportedInstructionError {
+            instruction
+        }
+    }
+}
+
+impl<Instruction: chip8_traits::Instruction> fmt::Display for UnsupportedInstructionError<Instruction> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Unsupported instruction '{}'", self.instruction)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct InstructionExecuteError<Instruction: chip8_traits::Instruction> {
+    instruction: Instruction
+}
+
+impl<Instruction: chip8_traits::Instruction> InstructionError<Instruction> for InstructionExecuteError<Instruction> { 
+    
+}
+
+impl<Instruction: chip8_traits::Instruction> InstructionExecuteError<Instruction> {
+    pub fn new(instruction: Instruction) -> InstructionExecuteError<Instruction> {
+        InstructionExecuteError {
+            instruction
+        }
+    }
+}
+
+impl<Instruction: chip8_traits::Instruction> fmt::Display for InstructionExecuteError<Instruction> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Issue when executing instruction '{}'", self.instruction)
+    }
+}*/

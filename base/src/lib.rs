@@ -1,3 +1,4 @@
+pub mod cpu;
 pub mod delay_timer;
 pub use self::delay_timer::DelayTimer;
 pub mod font;
@@ -6,11 +7,10 @@ pub mod interpreter;
 pub use self::interpreter::Interpreter;
 pub mod instruction;
 pub use self::instruction::Instruction;
-pub mod math;
-pub use self::math::count8;
-pub use self::math::count16;
 pub mod memory;
 pub use self::memory::Memory;
+pub mod out_of_bounds_error;
+pub use self::out_of_bounds_error::OutOfBoundsError;
 pub mod program_counter;
 pub use self::program_counter::ProgramCounter;
 pub mod screen_memory;
@@ -19,3 +19,7 @@ pub mod sound_timer;
 pub use self::sound_timer::SoundTimer;
 pub mod stack;
 pub use self::stack::Stack;
+pub mod variable_registers;
+pub use self::variable_registers::VariableRegisters;
+
+#[macro_use] extern crate guard;

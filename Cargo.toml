@@ -1,3 +1,2 @@
 [workspace]
 members = ["traits", "base", "console"]
-authors = ["Ian G <yo.ian.g@gmail.com>"]

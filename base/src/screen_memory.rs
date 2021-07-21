@@ -27,13 +27,14 @@ impl ScreenMemory {
     pub fn iter(&self) -> slice::Iter<Vec<bool>> {
         return self.contents.iter();
     }
+}
 
-    pub fn clear(&mut self) {
+impl chip8_traits::ScreenMemory for ScreenMemory {
+    fn clear(&mut self) {
         self.set_dimensions(self.width, self.height);
     }
 
-    // TODO: more explicit than bool
-    pub fn display(&mut self, x: u8, y: u8, memory: Iter<u8>, count: u8) -> bool {
+    fn display(&mut self, x: u8, y: u8, memory: Iter<u8>, count: u8) -> bool {
         let x = (x as usize) % self.width; 
         let y = (y as usize) % self.height;
 

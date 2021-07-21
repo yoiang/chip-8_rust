@@ -8,19 +8,21 @@ impl Stack {
             contents: vec![]
         } 
     }
+}
 
+impl chip8_traits::Stack for Stack {
     // TODO: limit to 12-bit (or memory length) values
     // TODO: optionally limit size
-    pub fn push(&mut self, value: usize) {
+    fn push(&mut self, value: usize) {
         self.contents.push(value);
     }
 
     // TODO: stack underflow
-    pub fn pop(&mut self) -> Option<usize> {
+    fn pop(&mut self) -> Option<usize> {
         self.contents.pop()
     }
 
-    pub fn clear(&mut self) {
+    fn clear(&mut self) {
         self.push(0);
         self.pop();
         self.contents.clear();
