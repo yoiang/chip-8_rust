@@ -1,7 +1,5 @@
 use std::{fs, usize};
 
-use crate::Font;
-
 use super::{Instruction, ProgramCounter};
 
 pub struct Interpreter {
@@ -72,7 +70,7 @@ impl Interpreter {
         }
     }
 
-    pub fn apply_font(&mut self, font: Font) {
+    pub fn apply_font(&mut self, font: impl chip8_traits::Font) {
         font.apply(self.memory.as_mut(), self.font_start);
     }
 

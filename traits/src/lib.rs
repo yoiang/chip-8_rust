@@ -1,3 +1,5 @@
+pub mod font;
+pub use self::font::Font;
 pub mod interpreter;
 pub use self::interpreter::Interpreter;
 pub mod keypad;
