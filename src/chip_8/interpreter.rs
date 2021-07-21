@@ -1,4 +1,5 @@
 use std::{fs, usize};
+use nanorand::{Rng};
 
 use super::{DelayTimer, Instruction, Memory, ProgramCounter, ScreenMemory, SoundTimer, Stack};
 
@@ -25,6 +26,8 @@ pub struct Interpreter {
     variable_registers: [u8; 16],
 
     font_start: usize,
+
+    random: nanorand::WyRand,
 }
 
 impl Interpreter {
@@ -51,6 +54,8 @@ impl Interpreter {
             variable_registers: [0; 16],
 
             font_start: 0x050,
+
+            random: nanorand::WyRand::new(),
         };
 
         let font = super::Font::new();
@@ -121,9 +126,40 @@ impl Interpreter {
             0x03 | 0x04 | 0x05 | 0x09 => self.skip(instruction),
             0x06 => self.set_register(instruction),
             0x07 => self.add_to_register(instruction),
+            0x08 => {
+                let n = Interpreter::count8(instruction.n().to_vec());
+                match n {
+                    0x00 => self.set_x_value_of_y(instruction),
+                    0x01 => self.or_x_value_of_y(instruction),
+                    0x02 => self.and_x_value_of_y(instruction),
+                    0x03 => self.xor_x_value_of_y(instruction),
+                    0x04 => self.add_to_x_value_of_y(instruction),
+                    0x05 => self.subtract_to_x_value_of_y(instruction),
+                    0x07 => self.subtract_to_x_value_of_y_reversed(instruction),
+
+                    0x06 => {}, // TODO:
+                    0x0E => {}, 
+                    _ => return, // TODO: log unsupported
+                }
+            },
             0x0A => self.set_index_register(instruction),
+            0x0B => {}, // TODO:
+            0x0C => self.set_register_random(instruction),
             0x0D => self.display(instruction),
-            0x0F => self.set_timer(instruction),
+            0x0E => {}, // TODO:
+            0x0F => {
+                let nn = Interpreter::count8(instruction.nn().to_vec());
+                match nn {
+                    0x07 | 0x15 | 0x18 => self.set_timer(instruction),
+                    0x1e => self.add_to_index(instruction),
+                    0x0a => self.get_key(instruction),
+                    0x29 => self.font_character(instruction),
+                    0x33 => self.binary_to_decimal(instruction),
+                    0x55 => self.register_to_memory(instruction),
+                    0x65 => self.memory_to_register(instruction),
+                    _ => {} // TODO:
+                }
+            },
             _ => return, // TODO: log unsupported
         }
     }
@@ -248,6 +284,120 @@ impl Interpreter {
                 // TODO: log
                 println!("Unexpected timer");
             }
+        }
+    }
+
+    fn set_x_value_of_y(&mut self, instruction: Instruction) {
+        let x = Interpreter::count8(instruction.x().to_vec());
+        let y = Interpreter::count8(instruction.y().to_vec());
+
+        self.variable_registers[x as usize] = self.variable_registers[y as usize];
+    }
+
+    fn or_x_value_of_y(&mut self, instruction: Instruction) {
+        let x = Interpreter::count8(instruction.x().to_vec());
+        let y = Interpreter::count8(instruction.y().to_vec());
+
+        self.variable_registers[x as usize] |= self.variable_registers[y as usize];
+    }
+
+    fn and_x_value_of_y(&mut self, instruction: Instruction) {
+        let x = Interpreter::count8(instruction.x().to_vec());
+        let y = Interpreter::count8(instruction.y().to_vec());
+
+        self.variable_registers[x as usize] &= self.variable_registers[y as usize];
+    }
+
+    fn xor_x_value_of_y(&mut self, instruction: Instruction) {
+        let x = Interpreter::count8(instruction.x().to_vec());
+        let y = Interpreter::count8(instruction.y().to_vec());
+
+        self.variable_registers[x as usize] ^= self.variable_registers[y as usize];
+    }
+
+    fn add_to_x_value_of_y(&mut self, instruction: Instruction) {
+        let x = Interpreter::count8(instruction.x().to_vec());
+        let y = Interpreter::count8(instruction.y().to_vec());
+
+        let result = self.variable_registers[x as usize].overflowing_add(self.variable_registers[y as usize]);
+        if result.1 {
+            self.variable_registers[x as usize] = result.0;
+            self.variable_registers[0x0f] = 1;
+        } else {
+            self.variable_registers[0x0f] = 0;
+        }
+    }
+
+    fn subtract_to_x_value_of_y(&mut self, instruction: Instruction) {
+        let x = Interpreter::count8(instruction.x().to_vec());
+        let y = Interpreter::count8(instruction.y().to_vec());
+
+        let result = self.variable_registers[x as usize].overflowing_sub(self.variable_registers[y as usize]);
+        if result.1 {
+            self.variable_registers[x as usize] = result.0;
+            self.variable_registers[0x0f] = 0;
+        } else {
+            self.variable_registers[0x0f] = 1;
+        }
+    }
+
+    fn subtract_to_x_value_of_y_reversed(&mut self, instruction: Instruction) {
+        let x = Interpreter::count8(instruction.x().to_vec());
+        let y = Interpreter::count8(instruction.y().to_vec());
+
+        let y_value = self.variable_registers[y as usize];
+        let result = y_value.overflowing_sub(self.variable_registers[x as usize]);
+        if result.1 {
+            self.variable_registers[x as usize] = result.0;
+            self.variable_registers[0x0f] = 0;
+        } else {
+            self.variable_registers[x as usize] = y_value;
+            self.variable_registers[0x0f] = 1;
+        }
+    }
+
+    fn set_register_random(&mut self, instruction: Instruction) {
+        let x = Interpreter::count8(instruction.x().to_vec());
+        let value = Interpreter::count8(instruction.nn().to_vec());
+        let random_value = self.random.generate::<u8>();
+        self.variable_registers[x as usize] = random_value & value;
+    }
+
+    fn add_to_index(&mut self, instruction: Instruction) {
+        let x = Interpreter::count8(instruction.x().to_vec());
+        // TODO: Amiga intepreter marks overflow option
+        self.index_register += self.variable_registers[x as usize] as usize;
+    }
+
+    fn get_key(&mut self, instruction: Instruction) {
+    }
+
+    fn font_character(&mut self, instruction: Instruction) {
+        let x = Interpreter::count8(instruction.x().to_vec());
+        self.index_register = self.font_start + self.variable_registers[x as usize] as usize;
+    }
+
+    fn binary_to_decimal(&mut self, instruction: Instruction) {
+    }
+
+    fn register_to_memory(&mut self, instruction: Instruction) {
+        let x = Interpreter::count8(instruction.x().to_vec());
+        // TODO: option to incriment I while working
+
+        for offset in 0..=x {
+            self.memory.set(
+                self.index_register + offset as usize, 
+                self.variable_registers[offset as usize]
+            );
+        }
+    }
+
+    fn memory_to_register(&mut self, instruction: Instruction) {
+        let x = Interpreter::count8(instruction.x().to_vec());
+        // TODO: option to incriment I while working
+
+        for offset in 0..=x {
+            self.variable_registers[offset as usize] = self.memory.get(self.index_register + offset as usize);
         }
     }
 }
