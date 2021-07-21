@@ -1,9 +1,9 @@
 use std::{fs, usize};
 
-use super::{Instruction, ProgramCounter};
+use crate::{count16, count8};
 
-pub struct Interpreter {
-    memory: Box<dyn chip8_traits::Memory>,
+pub struct Interpreter<Memory, Instruction> where Memory: chip8_traits::Memory, Instruction: chip8_traits::Instruction {
+    memory: Box<Memory>,
 
     screen_memory: super::ScreenMemory,
 
@@ -16,7 +16,7 @@ pub struct Interpreter {
 
     keypad: Box<dyn chip8_traits::Keypad>,
 
-    program_counter: ProgramCounter,
+    program_counter: Box<dyn chip8_traits::ProgramCounter<Instruction>>,
 
     index_register: usize,
 
@@ -27,9 +27,9 @@ pub struct Interpreter {
     random: Box<dyn chip8_traits::Random>,
 }
 
-impl Interpreter {
+impl<Memory, Instruction> Interpreter<Memory, Instruction> where Memory:chip8_traits::Memory, Instruction: chip8_traits::Instruction {
     pub fn new(
-        memory: Box<dyn chip8_traits::Memory>,
+        memory: Box<Memory>,
         screen_memory: super::ScreenMemory,
         renderer: Box<dyn chip8_traits::Renderer>,
         stack: super::Stack,
@@ -39,10 +39,10 @@ impl Interpreter {
 
         keypad: Box<dyn chip8_traits::Keypad>,
 
-        program_counter: ProgramCounter,
+        program_counter: Box<dyn chip8_traits::ProgramCounter<Instruction>>,
 
         random: Box<dyn chip8_traits::Random>,
-    ) -> Interpreter {
+    ) -> Interpreter<Memory, Instruction> {
         Interpreter {
             memory,
     
@@ -74,51 +74,16 @@ impl Interpreter {
         font.apply(self.memory.as_mut(), self.font_start);
     }
 
-    fn fetch(&mut self) -> Instruction {
+    fn fetch(&mut self) -> Box<Instruction> {
         self.program_counter.read(self.memory.as_ref())
     }
 
-    fn count8(bits: Vec<bool>) -> u8 {
-        let mut result: u8 = 0;
-
-        let mut place = 1;
-        for value in bits.iter().rev() {
-            if *value {
-                result += place;
-            }
-            
-            if place == 128 { // TODO: come up with better solution
-                break;
-            }
-            place *= 2;
-        }
-
-        result
-    }
-
-    fn count16(bits: Vec<bool>) -> u16 {
-        let mut result: u16 = 0;
-
-        let mut place = 1;
-        for value in bits.iter().rev() {
-            if *value {
-                result += place;
-            }
-            
-            if place == 32768 { // TODO: come up with better solution
-                break;
-            }
-            place *= 2;
-        }
-
-        result
-    }
-
-    fn execute(&mut self, instruction: Instruction) {
-        let count = Interpreter::count8(instruction.w().to_vec());
+    fn execute(&mut self, instruction: Box<Instruction>) {
+        let instruction = *instruction.as_ref();
+        let count = count8(instruction.w().to_vec());
         match count {
             0x00 => {
-                let nn = Interpreter::count8(instruction.nn().to_vec());
+                let nn = count8(instruction.nn().to_vec());
                 match nn {
                     0xe0 => self.screen_memory.clear(),
                     0xee => self.pop_stack(),
@@ -131,7 +96,7 @@ impl Interpreter {
             0x06 => self.set_register(instruction),
             0x07 => self.add_to_register(instruction),
             0x08 => {
-                let n = Interpreter::count8(instruction.n().to_vec());
+                let n = count8(instruction.n().to_vec());
                 match n {
                     0x00 => self.set_x_value_of_y(instruction),
                     0x01 => self.or_x_value_of_y(instruction),
@@ -152,7 +117,7 @@ impl Interpreter {
             0x0D => self.display(instruction),
             0x0E => {}, // TODO:
             0x0F => {
-                let nn = Interpreter::count8(instruction.nn().to_vec());
+                let nn = count8(instruction.nn().to_vec());
                 match nn {
                     0x07 | 0x15 | 0x18 => self.set_timer(instruction),
                     0x1e => self.add_to_index(instruction),
@@ -169,15 +134,15 @@ impl Interpreter {
     }
 }
 
-impl Interpreter {
+impl<Memory, Instruction> Interpreter<Memory, Instruction> where Memory: chip8_traits::Memory, Instruction: chip8_traits::Instruction {
     fn jump(&mut self, instruction: Instruction) {
-        let count = Interpreter::count16(instruction.nnn().to_vec());
+        let count = count16(instruction.nnn().to_vec());
         self.program_counter.set_position(count as usize);
     }
 
     fn push_stack(&mut self, instruction: Instruction) {
         self.stack.push(self.program_counter.get_position());
-        let count = Interpreter::count16(instruction.nnn().to_vec());
+        let count = count16(instruction.nnn().to_vec());
         self.program_counter.set_position(count as usize);
     }
 
@@ -193,20 +158,20 @@ impl Interpreter {
     }
 
     fn set_register(&mut self, instruction: Instruction) {
-        let index = Interpreter::count8(instruction.x().to_vec());
-        let value = Interpreter::count8(instruction.nn().to_vec());
+        let index = count8(instruction.x().to_vec());
+        let value = count8(instruction.nn().to_vec());
         self.variable_registers[index as usize] = value;
     }
 
     fn add_to_register(&mut self, instruction: Instruction) {
-        let index = Interpreter::count8(instruction.x().to_vec());
-        let value = Interpreter::count8(instruction.nn().to_vec());
+        let index = count8(instruction.x().to_vec());
+        let value = count8(instruction.nn().to_vec());
         let new_value = self.variable_registers[index as usize].wrapping_add(value);
         self.variable_registers[index as usize] = new_value;
     }
 
     fn set_index_register(&mut self, instruction: Instruction) {
-        let value = Interpreter::count16(instruction.nnn().to_vec());
+        let value = count16(instruction.nnn().to_vec());
         self.index_register = value as usize;
     }
 
@@ -215,9 +180,9 @@ impl Interpreter {
     }
 
     fn display(&mut self, instruction: Instruction) {
-        let vx = Interpreter::count8(instruction.x().to_vec());
-        let vy = Interpreter::count8(instruction.y().to_vec());
-        let n = Interpreter::count8(instruction.n().to_vec());
+        let vx = count8(instruction.x().to_vec());
+        let vy = count8(instruction.y().to_vec());
+        let n = count8(instruction.n().to_vec());
         
         self.variable_registers[15] = 0;
 
@@ -235,18 +200,18 @@ impl Interpreter {
 
     fn set_timer(&mut self, instruction: Instruction) {
         let x = instruction.x();
-        match Interpreter::count8(instruction.nn().to_vec()) {
+        match count8(instruction.nn().to_vec()) {
             7 => {
-                self.variable_registers[Interpreter::count8(x.to_vec()) as usize] = self.delay_timer.value();
+                self.variable_registers[count8(x.to_vec()) as usize] = self.delay_timer.value();
             },
             15 => {
                 self.delay_timer.set_value(
-                    self.variable_registers[Interpreter::count8(x.to_vec()) as usize]
+                    self.variable_registers[count8(x.to_vec()) as usize]
                 );
             },
             18 => {
                 self.sound_timer.set_value(
-                    self.variable_registers[Interpreter::count8(x.to_vec()) as usize]
+                    self.variable_registers[count8(x.to_vec()) as usize]
                 );
             }
             _ => {
@@ -257,29 +222,29 @@ impl Interpreter {
     }
 
     fn skip(&mut self, instruction: Instruction) {
-        let count = Interpreter::count8(instruction.w().to_vec());
-        let x = Interpreter::count8(instruction.x().to_vec());
+        let count = count8(instruction.w().to_vec());
+        let x = count8(instruction.x().to_vec());
         match count {
             0x3 => {
-                let value = Interpreter::count8(instruction.nn().to_vec());
+                let value = count8(instruction.nn().to_vec());
                 if value == self.variable_registers[x as usize] {
                     self.program_counter.skip();
                 }
             },
             0x4 => {
-                let value = Interpreter::count8(instruction.nn().to_vec());
+                let value = count8(instruction.nn().to_vec());
                 if value != self.variable_registers[x as usize] {
                     self.program_counter.skip();
                 }
             },
             0x5 => {
-                let y = Interpreter::count8(instruction.y().to_vec());
+                let y = count8(instruction.y().to_vec());
                 if self.variable_registers[x as usize] == self.variable_registers[y as usize] {
                     self.program_counter.skip();
                 }
             },
             0x9 => {
-                let y = Interpreter::count8(instruction.y().to_vec());
+                let y = count8(instruction.y().to_vec());
                 if self.variable_registers[x as usize] != self.variable_registers[y as usize] {
                     self.program_counter.skip();
                 }
@@ -292,36 +257,36 @@ impl Interpreter {
     }
 
     fn set_x_value_of_y(&mut self, instruction: Instruction) {
-        let x = Interpreter::count8(instruction.x().to_vec());
-        let y = Interpreter::count8(instruction.y().to_vec());
+        let x = count8(instruction.x().to_vec());
+        let y = count8(instruction.y().to_vec());
 
         self.variable_registers[x as usize] = self.variable_registers[y as usize];
     }
 
     fn or_x_value_of_y(&mut self, instruction: Instruction) {
-        let x = Interpreter::count8(instruction.x().to_vec());
-        let y = Interpreter::count8(instruction.y().to_vec());
+        let x = count8(instruction.x().to_vec());
+        let y = count8(instruction.y().to_vec());
 
         self.variable_registers[x as usize] |= self.variable_registers[y as usize];
     }
 
     fn and_x_value_of_y(&mut self, instruction: Instruction) {
-        let x = Interpreter::count8(instruction.x().to_vec());
-        let y = Interpreter::count8(instruction.y().to_vec());
+        let x = count8(instruction.x().to_vec());
+        let y = count8(instruction.y().to_vec());
 
         self.variable_registers[x as usize] &= self.variable_registers[y as usize];
     }
 
     fn xor_x_value_of_y(&mut self, instruction: Instruction) {
-        let x = Interpreter::count8(instruction.x().to_vec());
-        let y = Interpreter::count8(instruction.y().to_vec());
+        let x = count8(instruction.x().to_vec());
+        let y = count8(instruction.y().to_vec());
 
         self.variable_registers[x as usize] ^= self.variable_registers[y as usize];
     }
 
     fn add_to_x_value_of_y(&mut self, instruction: Instruction) {
-        let x = Interpreter::count8(instruction.x().to_vec());
-        let y = Interpreter::count8(instruction.y().to_vec());
+        let x = count8(instruction.x().to_vec());
+        let y = count8(instruction.y().to_vec());
 
         let result = self.variable_registers[x as usize].overflowing_add(self.variable_registers[y as usize]);
         if result.1 {
@@ -333,8 +298,8 @@ impl Interpreter {
     }
 
     fn subtract_to_x_value_of_y(&mut self, instruction: Instruction) {
-        let x = Interpreter::count8(instruction.x().to_vec());
-        let y = Interpreter::count8(instruction.y().to_vec());
+        let x = count8(instruction.x().to_vec());
+        let y = count8(instruction.y().to_vec());
 
         let result = self.variable_registers[x as usize].overflowing_sub(self.variable_registers[y as usize]);
         if result.1 {
@@ -346,8 +311,8 @@ impl Interpreter {
     }
 
     fn subtract_to_x_value_of_y_reversed(&mut self, instruction: Instruction) {
-        let x = Interpreter::count8(instruction.x().to_vec());
-        let y = Interpreter::count8(instruction.y().to_vec());
+        let x = count8(instruction.x().to_vec());
+        let y = count8(instruction.y().to_vec());
 
         let y_value = self.variable_registers[y as usize];
         let result = y_value.overflowing_sub(self.variable_registers[x as usize]);
@@ -361,24 +326,24 @@ impl Interpreter {
     }
 
     fn set_register_random(&mut self, instruction: Instruction) {
-        let x = Interpreter::count8(instruction.x().to_vec());
-        let value = Interpreter::count8(instruction.nn().to_vec());
+        let x = count8(instruction.x().to_vec());
+        let value = count8(instruction.nn().to_vec());
         let random_value = self.random.value();
         self.variable_registers[x as usize] = random_value & value;
     }
 
     fn add_to_index(&mut self, instruction: Instruction) {
-        let x = Interpreter::count8(instruction.x().to_vec());
+        let x = count8(instruction.x().to_vec());
         // TODO: Amiga intepreter marks overflow option
         self.index_register += self.variable_registers[x as usize] as usize;
     }
 
     fn get_key(&mut self, instruction: Instruction) {
-        let x = Interpreter::count8(instruction.x().to_vec());
+        let x = count8(instruction.x().to_vec());
     }
 
     fn font_character(&mut self, instruction: Instruction) {
-        let x = Interpreter::count8(instruction.x().to_vec());
+        let x = count8(instruction.x().to_vec());
         self.index_register = self.font_start + (self.variable_registers[x as usize] * 5) as usize;
     }
 
@@ -386,7 +351,7 @@ impl Interpreter {
     }
 
     fn register_to_memory(&mut self, instruction: Instruction) {
-        let x = Interpreter::count8(instruction.x().to_vec());
+        let x = count8(instruction.x().to_vec());
         // TODO: option to incriment I while working
 
         for offset in 0..=x {
@@ -398,7 +363,7 @@ impl Interpreter {
     }
 
     fn memory_to_register(&mut self, instruction: Instruction) {
-        let x = Interpreter::count8(instruction.x().to_vec());
+        let x = count8(instruction.x().to_vec());
         // TODO: option to incriment I while working
 
         for offset in 0..=x {
@@ -407,7 +372,7 @@ impl Interpreter {
     }
 }
 
-impl chip8_traits::Interpreter for Interpreter {
+impl<Memory, Instruction> chip8_traits::Interpreter for Interpreter<Memory, Instruction> where Memory: chip8_traits::Memory, Instruction: chip8_traits::Instruction {
     fn load(&mut self, file_name: &str, start_position: usize) -> Result<(), std::io::Error> {
         let result = fs::read(file_name);
         match result {

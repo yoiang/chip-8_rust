@@ -1,5 +1,3 @@
-use super::Instruction;
-
 pub struct ProgramCounter {
     position: usize
 }
@@ -10,28 +8,30 @@ impl ProgramCounter {
             position: 0
         }
     }
+}
 
-    pub fn read(&mut self, memory: &dyn chip8_traits::Memory) -> Instruction {
+impl chip8_traits::ProgramCounter<super::Instruction> for ProgramCounter  {
+    fn read(&mut self, memory: &dyn chip8_traits::Memory) -> Box<super::Instruction> {
         let first = memory.get(self.position);
         let second = memory.get(self.position + 1);
         self.position += 2;
 
-        Instruction::new(first, second)
+        Box::new(super::Instruction::new(first, second))
     }
     
-    pub fn get_position(&self) -> usize {
+    fn get_position(&self) -> usize {
         return self.position;
     }
 
-    pub fn set_position(&mut self, new_position: usize) {
+    fn set_position(&mut self, new_position: usize) {
         self.position = new_position;
     }
 
-    pub fn skip(&mut self) {
+    fn skip(&mut self) {
         self.position += 2;
     }
 
-    pub fn go_back(&mut self) {
+    fn go_back(&mut self) {
         self.position -= 2;
     }
 }

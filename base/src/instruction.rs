@@ -6,6 +6,7 @@ pub struct Instruction {
 }
 
 impl Instruction {
+
     pub fn new(first: u8, second: u8) -> Instruction {
         Instruction {
             first,
@@ -27,30 +28,40 @@ impl Instruction {
 
         result
     }
+}
 
-    pub fn w(&self) -> [bool; 4] {
+impl Copy for Instruction {}
+
+impl Clone for Instruction {
+    fn clone(&self) -> Instruction {
+        Instruction::new(self.first, self.second)
+    }
+}
+
+impl chip8_traits::Instruction for Instruction {
+    fn w(&self) -> [bool; 4] {
         Instruction::get_bits(self.first)[0..=3].try_into().expect("Slice with incorrect length")
     }
 
-    pub fn x(&self) -> [bool; 4] {
+    fn x(&self) -> [bool; 4] {
         Instruction::get_bits(self.first)[4..=7].try_into().expect("Slice with incorrect length")        
     }
 
-    pub fn y(&self) -> [bool; 4] {
+    fn y(&self) -> [bool; 4] {
         Instruction::get_bits(self.second)[0..=3].try_into().expect("Slice with incorrect length")
         
     }
 
-    pub fn n(&self) -> [bool; 4] {
+    fn n(&self) -> [bool; 4] {
         Instruction::get_bits(self.second)[4..=7].try_into().expect("Slice with incorrect length")        
         
     }
 
-    pub fn nn(&self) -> [bool; 8] {
+    fn nn(&self) -> [bool; 8] {
         Instruction::get_bits(self.second)
     }
 
-    pub fn nnn(&self) -> [bool; 12] {
+    fn nnn(&self) -> [bool; 12] {
         let mut result = [false; 12];
 
         let mut index = 0;
@@ -67,10 +78,3 @@ impl Instruction {
         result
     }
 }
-
-/*
-X: The second nibble. Used to look up one of the 16 registers (VX) from V0 through VF.
-Y: The third nibble. Also used to look up one of the 16 registers (VY) from V0 through VF.
-N: The fourth nibble. A 4-bit number.
-NN: The second byte (third and fourth nibbles). An 8-bit immediate number.
-NNN: The second, third and fourth nibbles. A 12-bit immediate memory address.*/
