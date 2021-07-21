@@ -4,6 +4,8 @@ pub mod keypad;
 pub use self::keypad::Keypad;
 pub mod memory;
 pub use self::memory::Memory;
+pub mod random;
+pub use self::random::Random;
 pub mod renderer;
 pub use self::renderer::Renderer;
 pub mod timer;

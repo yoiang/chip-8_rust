@@ -1,29 +1,33 @@
 use std::{env, time::Duration};
 
-use crate::traits::Interpreter;
-
-mod chip_8;
-mod traits;
+use chip8_base::Font;
+use chip8_traits::Interpreter;
 
 const DEFAULT_PROGRAM_START: usize = 0x200;
 const MAIN_LOOP_FREQUENCY: Duration = Duration::from_millis(1);
 
+mod renderer;
+mod keypad;
+mod interpreter;
+mod random;
+
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    let mut interpreter = chip_8::Interpreter::new();
+    let mut interpreter = interpreter::new();
+    let font = Font::new();
+    interpreter.apply_font(font);
 
     let load_file_name = {
         if args.len() > 1 {
             args[1].as_str()
         } else {
-            "examples/test_opcode.ch8"
+            "examples/Puzzle.ch8"
         }
     };
     let result = interpreter.load(load_file_name, DEFAULT_PROGRAM_START);
     match result {
         Ok(_) => {
-            println!("{:?}", interpreter.dump_memory());
             let result = interpreter.run(MAIN_LOOP_FREQUENCY);
             match result {
                 Ok(_) => {

@@ -11,7 +11,7 @@ impl ProgramCounter {
         }
     }
 
-    pub fn read(&mut self, memory: &dyn crate::traits::Memory) -> Instruction {
+    pub fn read(&mut self, memory: &dyn chip8_traits::Memory) -> Instruction {
         let first = memory.get(self.position);
         let second = memory.get(self.position + 1);
         self.position += 2;
@@ -29,5 +29,9 @@ impl ProgramCounter {
 
     pub fn skip(&mut self) {
         self.position += 2;
+    }
+
+    pub fn go_back(&mut self) {
+        self.position -= 2;
     }
 }

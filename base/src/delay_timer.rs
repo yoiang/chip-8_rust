@@ -10,7 +10,7 @@ impl DelayTimer {
     }
 }
 
-impl crate::traits::Timer for DelayTimer {
+impl chip8_traits::Timer for DelayTimer {
     fn value(&self) -> u8 {
         self.value
     }

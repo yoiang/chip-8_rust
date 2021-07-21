@@ -12,7 +12,7 @@ impl Memory {
     }
 }
 
-impl crate::traits::Memory for Memory {
+impl chip8_traits::Memory for Memory {
     fn set_size(&mut self, size: usize) {
         self.contents = vec![0; size];
     }

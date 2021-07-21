@@ -1,0 +1,5 @@
+[package]
+name = "chip8_traits"
+edition = "2015"       
+version = "0.1.0"
+authors = ["Ian G <yo.ian.g@gmail.com>"]

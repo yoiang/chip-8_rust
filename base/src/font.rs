@@ -26,7 +26,7 @@ impl Font {
         }
     }
 
-    pub fn apply(&self, memory: &mut dyn crate::traits::Memory, start: usize) {
+    pub fn apply(&self, memory: &mut dyn chip8_traits::Memory, start: usize) {
         let mut offset = start;
         for character in self.contents.iter() {
             for value in character.iter() {

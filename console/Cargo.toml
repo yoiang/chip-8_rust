@@ -1,0 +1,11 @@
+[package]
+name = "chip8_console"
+version = "0.1.0"
+edition = "2018"
+authors = ["Ian G <yo.ian.g@gmail.com>"]
+
+[dependencies]
+chip8_traits = { path = "../traits" }
+chip8_base = { path = "../base" }
+termion = "1.5.6"
+nanorand = "0.6.0"

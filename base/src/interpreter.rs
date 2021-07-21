@@ -1,23 +1,22 @@
 use std::{fs, usize};
-use nanorand::{Rng};
 
-use super::{DelayTimer, Instruction, Memory, ProgramCounter, ScreenMemory, SoundTimer, Stack};
+use crate::Font;
 
-extern crate yacurses;
+use super::{Instruction, ProgramCounter};
 
 pub struct Interpreter {
-    memory: Box<dyn crate::traits::Memory>,
+    memory: Box<dyn chip8_traits::Memory>,
 
     screen_memory: super::ScreenMemory,
 
-    renderer: Box<dyn crate::traits::Renderer>,
+    renderer: Box<dyn chip8_traits::Renderer>,
 
     stack: super::Stack,
 
-    delay_timer: Box<dyn crate::traits::Timer>,
-    sound_timer: Box<dyn crate::traits::Timer>,
+    delay_timer: Box<dyn chip8_traits::Timer>,
+    sound_timer: Box<dyn chip8_traits::Timer>,
 
-    keypad: Box<dyn crate::traits::Keypad>,
+    keypad: Box<dyn chip8_traits::Keypad>,
 
     program_counter: ProgramCounter,
 
@@ -27,49 +26,56 @@ pub struct Interpreter {
 
     font_start: usize,
 
-    random: nanorand::WyRand,
+    random: Box<dyn chip8_traits::Random>,
 }
 
 impl Interpreter {
-    pub fn new() -> Interpreter {
-        let mut result = Interpreter {
-            memory: Box::new(Memory::new(4096)),
+    pub fn new(
+        memory: Box<dyn chip8_traits::Memory>,
+        screen_memory: super::ScreenMemory,
+        renderer: Box<dyn chip8_traits::Renderer>,
+        stack: super::Stack,
 
-            screen_memory: ScreenMemory::new(64, 32),
+        delay_timer: Box<dyn chip8_traits::Timer>,
+        sound_timer: Box<dyn chip8_traits::Timer>,
 
-            renderer: Box::new(super::console::Renderer::new()),
+        keypad: Box<dyn chip8_traits::Keypad>,
 
-            stack: Stack::new(),
+        program_counter: ProgramCounter,
 
-            delay_timer: Box::new(DelayTimer::new()),
-
-            sound_timer: Box::new(SoundTimer::new()),
-
-            keypad: Box::new(super::console::Keypad::new()),
-
-            program_counter: ProgramCounter::new(),
-
+        random: Box<dyn chip8_traits::Random>,
+    ) -> Interpreter {
+        Interpreter {
+            memory,
+    
+            screen_memory,
+    
+            renderer,
+    
+            stack,
+    
+            delay_timer,
+    
+            sound_timer,
+    
+            keypad,
+    
+            program_counter,
+    
             index_register: 0,
-
+    
             variable_registers: [0; 16],
-
+    
             font_start: 0x050,
-
-            random: nanorand::WyRand::new(),
-        };
-
-        let font = super::Font::new();
-        font.apply(result.memory.as_mut(), result.font_start);
-
-        result.memory.set(result.font_start, 0);
-        result.keypad.state();
-        result.stack.clear();
-
-        result
+    
+            random,
+        }
     }
-}
 
-impl Interpreter {
+    pub fn apply_font(&mut self, font: Font) {
+        font.apply(self.memory.as_mut(), self.font_start);
+    }
+
     fn fetch(&mut self) -> Instruction {
         self.program_counter.read(self.memory.as_ref())
     }
@@ -359,7 +365,7 @@ impl Interpreter {
     fn set_register_random(&mut self, instruction: Instruction) {
         let x = Interpreter::count8(instruction.x().to_vec());
         let value = Interpreter::count8(instruction.nn().to_vec());
-        let random_value = self.random.generate::<u8>();
+        let random_value = self.random.value();
         self.variable_registers[x as usize] = random_value & value;
     }
 
@@ -370,6 +376,7 @@ impl Interpreter {
     }
 
     fn get_key(&mut self, instruction: Instruction) {
+        let x = Interpreter::count8(instruction.x().to_vec());
     }
 
     fn font_character(&mut self, instruction: Instruction) {
@@ -402,7 +409,7 @@ impl Interpreter {
     }
 }
 
-impl super::super::traits::Interpreter for Interpreter {
+impl chip8_traits::Interpreter for Interpreter {
     fn load(&mut self, file_name: &str, start_position: usize) -> Result<(), std::io::Error> {
         let result = fs::read(file_name);
         match result {

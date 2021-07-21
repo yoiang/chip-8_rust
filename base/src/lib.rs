@@ -16,6 +16,3 @@ pub mod sound_timer;
 pub use self::sound_timer::SoundTimer;
 pub mod stack;
 pub use self::stack::Stack;
-
-pub mod console;
-pub mod curses;

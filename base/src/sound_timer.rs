@@ -10,7 +10,7 @@ impl SoundTimer {
     }
 }
 
-impl crate::traits::Timer for SoundTimer {
+impl chip8_traits::Timer for SoundTimer {
     fn value(&self) -> u8 {
         self.value
     }
