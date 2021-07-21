@@ -1,4 +1,4 @@
-use std::{cell::RefCell, fs, rc::Rc, usize};
+use std::{fs, usize};
 
 use super::{DelayTimer, Instruction, Memory, ProgramCounter, ScreenMemory, SoundTimer, Stack};
 
@@ -108,12 +108,22 @@ impl Interpreter {
     fn execute(&mut self, instruction: Instruction) {
         let count = Interpreter::count8(instruction.w().to_vec());
         match count {
-            0x00 => self.screen_memory.clear(),
+            0x00 => {
+                let nn = Interpreter::count8(instruction.nn().to_vec());
+                match nn {
+                    0xe0 => self.screen_memory.clear(),
+                    0xee => self.pop_stack(),
+                    _ => return, // TODO: log unsupported
+                }
+            },
             0x01 => self.jump(instruction),
+            0x02 => self.push_stack(instruction),
+            0x03 | 0x04 | 0x05 | 0x09 => self.skip(instruction),
             0x06 => self.set_register(instruction),
             0x07 => self.add_to_register(instruction),
             0x0A => self.set_index_register(instruction),
             0x0D => self.display(instruction),
+            0x0F => self.set_timer(instruction),
             _ => return, // TODO: log unsupported
         }
     }
@@ -123,6 +133,23 @@ impl Interpreter {
     fn jump(&mut self, instruction: Instruction) {
         let count = Interpreter::count16(instruction.nnn().to_vec());
         self.program_counter.set_position(count as usize);
+    }
+
+    fn push_stack(&mut self, instruction: Instruction) {
+        self.stack.push(self.program_counter.get_position());
+        let count = Interpreter::count16(instruction.nnn().to_vec());
+        self.program_counter.set_position(count as usize);
+    }
+
+    fn pop_stack(&mut self) {
+        let result = self.stack.pop();
+        match result {
+            Some(value) =>  self.program_counter.set_position(value),
+            None => {
+                // TODO: log
+                println!("Stack underflow");
+            }
+        }
     }
 
     fn set_register(&mut self, instruction: Instruction) {
@@ -163,6 +190,64 @@ impl Interpreter {
             self.memory.get_iter(self.index_register), 
             n) {
                 self.variable_registers[15] = 1;
+        }
+    }
+
+    fn set_timer(&mut self, instruction: Instruction) {
+        let x = instruction.x();
+        match Interpreter::count8(instruction.nn().to_vec()) {
+            7 => {
+                self.variable_registers[Interpreter::count8(x.to_vec()) as usize] = self.delay_timer.value();
+            },
+            15 => {
+                self.delay_timer.set_value(
+                    self.variable_registers[Interpreter::count8(x.to_vec()) as usize]
+                );
+            },
+            18 => {
+                self.sound_timer.set_value(
+                    self.variable_registers[Interpreter::count8(x.to_vec()) as usize]
+                );
+            }
+            _ => {
+                // TODO: log
+                println!("Unexpected timer");
+            }
+        }
+    }
+
+    fn skip(&mut self, instruction: Instruction) {
+        let count = Interpreter::count8(instruction.w().to_vec());
+        let x = Interpreter::count8(instruction.x().to_vec());
+        match count {
+            0x3 => {
+                let value = Interpreter::count8(instruction.nn().to_vec());
+                if value == self.variable_registers[x as usize] {
+                    self.program_counter.skip();
+                }
+            },
+            0x4 => {
+                let value = Interpreter::count8(instruction.nn().to_vec());
+                if value != self.variable_registers[x as usize] {
+                    self.program_counter.skip();
+                }
+            },
+            0x5 => {
+                let y = Interpreter::count8(instruction.y().to_vec());
+                if self.variable_registers[x as usize] == self.variable_registers[y as usize] {
+                    self.program_counter.skip();
+                }
+            },
+            0x9 => {
+                let y = Interpreter::count8(instruction.y().to_vec());
+                if self.variable_registers[x as usize] != self.variable_registers[y as usize] {
+                    self.program_counter.skip();
+                }
+            },
+            _ => {
+                // TODO: log
+                println!("Unexpected timer");
+            }
         }
     }
 }

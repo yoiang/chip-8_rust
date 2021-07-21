@@ -18,8 +18,16 @@ impl ProgramCounter {
 
         Instruction::new(first, second)
     }
+    
+    pub fn get_position(&self) -> usize {
+        return self.position;
+    }
 
     pub fn set_position(&mut self, new_position: usize) {
         self.position = new_position;
+    }
+
+    pub fn skip(&mut self) {
+        self.position += 2;
     }
 }
