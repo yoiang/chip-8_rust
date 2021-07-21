@@ -8,3 +8,4 @@ edition = "2018"
 [dependencies]
 yacurses = "0.2.4"
 nanorand = "0.6.0"
+termion = "1.5.6"

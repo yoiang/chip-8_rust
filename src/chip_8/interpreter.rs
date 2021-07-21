@@ -374,7 +374,7 @@ impl Interpreter {
 
     fn font_character(&mut self, instruction: Instruction) {
         let x = Interpreter::count8(instruction.x().to_vec());
-        self.index_register = self.font_start + self.variable_registers[x as usize] as usize;
+        self.index_register = self.font_start + (self.variable_registers[x as usize] * 5) as usize;
     }
 
     fn binary_to_decimal(&mut self, instruction: Instruction) {
