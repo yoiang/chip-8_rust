@@ -3,10 +3,36 @@
   <head>
     <meta charset="utf-8">
     <title>CHIP-8</title>
+    <style>
+      html {
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        margin: 0;
+      }
+      body {
+        color: green;
+        background-color: black;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        margin: 0;
+      }
+      .controls-container {
+        color: green;
+        padding: 5px;
+      }
+    </style>
   </head>
   <body>
     <noscript>This page contains webassembly and javascript content, please enable javascript in your browser.</noscript>
     <pre id="chip8_render-canvas"></pre>
+
+    <div id="app-controls-container" class="controls-container">
+      <select id="app-programs" name="Programs">
+      </select>
+    </div>
+
     <script src="./bootstrap.js"></script>
   </body>
 </html>
