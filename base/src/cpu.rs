@@ -1,3 +1,5 @@
+use chip8_traits::ProgramCounter;
+
 use crate::{DelayTimer, Instruction, Memory, ProgramCounter, ScreenMemory, SoundTimer, Stack, VariableRegisters, instruction::{InstructionError}};
 
 type InstructionResult<T, Instruction: chip8_traits::Instruction> = std::result::Result<T, InstructionError<Instruction>>;
@@ -25,7 +27,7 @@ pub fn execute<Random: chip8_traits::Random> (
             match nn {
                 0xe0 => clear_screen(screen_memory),
                 0xee => pop_stack(stack, program_counter),
-                _ => return Err(InstructionError::UnsupportedInstructionError(instruction))
+                _ => return Err(InstructionError::UnsupportedInstructionError(instruction)) // TODO: 0x0nnn
             }
         },
         0x01 => jump(instruction, program_counter),
@@ -46,15 +48,14 @@ pub fn execute<Random: chip8_traits::Random> (
                 0x07 => return subtract_to_x_value_of_y_reversed(instruction, variable_registers),
                 0x0e => return set_x_left_shifted_y(instruction, variable_registers),
 
-                // 0x06 => {}, // TODO:
                 _ => return Err(InstructionError::UnsupportedInstructionError(instruction))
             }
         },
         0x0a => set_index_register(instruction, index_register),
-        // 0x0b => {}, // TODO:
+        0x0b => return jump_v0(instruction, program_counter, variable_registers), // TODO: optional BXNN
         0x0c => return set_register_random(instruction, variable_registers, random),
         0x0d => return display(instruction, index_register, variable_registers, memory, screen_memory),
-        // 0x0e => {}, // TODO:
+        // 0x0e => {}, // TODO: skip if key
         0x0f => {
             let nn = chip8_traits::count8(chip8_traits::Instruction::nn(&instruction).to_vec());
             match nn {
@@ -452,6 +453,17 @@ fn set_x_left_shifted_y(instruction: Instruction, variable_registers: &mut Varia
 fn set_index_register(instruction: Instruction, index_register: &mut usize) {
     let value = chip8_traits::count16(chip8_traits::Instruction::nnn(&instruction).to_vec());
     (*index_register) = value as usize;
+}
+
+fn jump_v0(instruction: Instruction, program_counter: &mut ProgramCounter, variable_registers: &VariableRegisters) -> ExecuteResult {
+    guard!(let Some(x_value) = variable_registers.get(0) else {
+        return Err(InstructionError::InstructionExecuteError(instruction));
+    });
+
+    let value = chip8_traits::count16(chip8_traits::Instruction::nnn(&instruction).to_vec());
+    program_counter.set_position(value as usize + x_value as usize);
+
+    Ok(())
 }
 
 fn set_register_random<Random: chip8_traits::Random>(instruction: Instruction, variable_registers: &mut VariableRegisters, random: &mut Random)-> ExecuteResult {
