@@ -15,16 +15,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout 🛎️
+      uses: actions/checkout@v2
+    
     - name: Build rust-wasm
       run: |
         cd wasm
         cargo build --verbose
+        
     - name: Build webpack
       run: |
         cd wasm/www
         npm install
+        ls ../pkg
         npm run build
+        
     - name: Deploy to Github Pages 🚀
       uses: JamesIves/github-pages-deploy-action@4.1.4
       with:
