@@ -1,3 +1,5 @@
+use js_sys::Math::random;
+
 pub struct Random {
 }
 
@@ -10,6 +12,8 @@ impl Random {
 
 impl chip8_traits::Random for Random {
     fn value(&mut self) -> u8 {
-        crate::extern_javascript::random().to_be_bytes()[3]
+        unsafe {
+            random().to_be_bytes()[3]
+        }
     }
 }

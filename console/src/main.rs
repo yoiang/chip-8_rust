@@ -25,7 +25,7 @@ fn main() {
             "examples/Puzzle.ch8"
         }
     };
-    let result = interpreter.load(load_file_name, DEFAULT_PROGRAM_START);
+    let result = interpreter.load_file(load_file_name, DEFAULT_PROGRAM_START);
     match result {
         Ok(_) => {
             let result = interpreter.run(MAIN_LOOP_FREQUENCY);

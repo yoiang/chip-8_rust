@@ -97,20 +97,28 @@ where Renderer: chip8_traits::Renderer,
 
     // fn binary_to_decimal(&mut self, instruction: crate::Instruction) {
     // }
+
+    pub fn dump_program_counter(&self) -> usize {
+        chip8_traits::ProgramCounter::<crate::Instruction>::get_position(&self.program_counter)
+    }
 }
 
 impl<Renderer, Keypad, Random> chip8_traits::Interpreter for Interpreter<Renderer, Keypad, Random> 
 where Renderer: chip8_traits::Renderer, 
     Keypad: chip8_traits::Keypad,
     Random: chip8_traits::Random {
-    fn load(&mut self, file_name: &str, start_position: usize) -> Result<(), std::io::Error> {
+    fn load(&mut self, program: Vec<u8>, start_position: usize) {
+        for (index, value) in program.iter().enumerate() {
+            chip8_traits::Memory::set(self.memory.as_mut(), start_position + index, *value);
+        }
+        chip8_traits::ProgramCounter::set_position(&mut self.program_counter, start_position);
+    }
+
+    fn load_file(&mut self, file_name: &str, start_position: usize) -> Result<(), std::io::Error> {
         let result = fs::read(file_name);
         match result {
             Ok(contents) => {
-                for (index, value) in contents.iter().enumerate() {
-                    chip8_traits::Memory::set(self.memory.as_mut(), start_position + index, *value);
-                }
-                chip8_traits::ProgramCounter::set_position(&mut self.program_counter, start_position);
+                self.load(contents, start_position);
                 return Ok(());
             },
             Err(error) => {
