@@ -18,18 +18,20 @@ impl chip8_traits::Memory for Memory {
     }
 
     fn set(&mut self, location: usize, value: u8) {
+        // TODO: Result
         self.contents[location] = value;
     }
 
     fn get(&self, location: usize) -> u8 {
+        // TODO: Result
         self.contents[location]
-    }
-
-    fn dump(&self) -> Vec<u8> {
-        self.contents.clone()
     }
 
     fn get_iter(&self, location: usize) -> Iter<u8> {
         return self.contents.split_at(location).1.iter();
+    }
+
+    fn dump(&self) -> Vec<u8> {
+        self.contents.clone()
     }
 }

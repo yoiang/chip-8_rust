@@ -1,6 +1,6 @@
 use std::{fs, usize};
 
-use crate::cpu::execute;
+use crate::{DelayTimer, SoundTimer, cpu::execute};
 
 pub struct Interpreter<Renderer, Keypad, Random> 
 where Renderer: chip8_traits::Renderer, 
@@ -14,8 +14,8 @@ where Renderer: chip8_traits::Renderer,
 
     stack: Box<crate::Stack>,
 
-    delay_timer: Box<dyn chip8_traits::Timer>,
-    sound_timer: Box<dyn chip8_traits::Timer>,
+    delay_timer: Box<DelayTimer>,
+    sound_timer: Box<SoundTimer>,
 
     keypad: Box<Keypad>,
 
@@ -40,8 +40,8 @@ where Renderer: chip8_traits::Renderer,
         renderer: Box<Renderer>,
         stack: Box<crate::Stack>,
 
-        delay_timer: Box<crate::DelayTimer>,
-        sound_timer: Box<crate::SoundTimer>,
+        delay_timer: Box<DelayTimer>,
+        sound_timer: Box<SoundTimer>,
 
         keypad: Box<Keypad>,
 
@@ -91,66 +91,11 @@ where Renderer: chip8_traits::Renderer,
     Random: chip8_traits::Random {
 
 
-
-    // fn get_register(&mut self, index: usize) -> u8 {
-    //     self.variable_registers[index]
-    // }
-
-    // fn set_timer(&mut self, instruction: crate::Instruction) {
-    //     let x = instruction.x();
-    //     match count8(instruction.nn().to_vec()) {
-    //         7 => {
-    //             self.variable_registers[count8(x.to_vec()) as usize] = self.delay_timer.value();
-    //         },
-    //         15 => {
-    //             self.delay_timer.set_value(
-    //                 self.variable_registers[count8(x.to_vec()) as usize]
-    //             );
-    //         },
-    //         18 => {
-    //             self.sound_timer.set_value(
-    //                 self.variable_registers[count8(x.to_vec()) as usize]
-    //             );
-    //         }
-    //         _ => {
-    //             // TODO: log
-    //             println!("Unexpected timer");
-    //         }
-    //     }
-    // }
-
-    // fn add_to_index(&mut self, instruction: crate::Instruction) {
-    //     let x = count8(instruction.x().to_vec());
-    //     // TODO: Amiga intepreter marks overflow option
-    //     self.index_register += self.variable_registers[x as usize] as usize;
-    // }
-
     // fn get_key(&mut self, instruction: crate::Instruction) {
     //     let x = count8(instruction.x().to_vec());
     // }
 
     // fn binary_to_decimal(&mut self, instruction: crate::Instruction) {
-    // }
-
-    // fn register_to_memory(&mut self, instruction: crate::Instruction) {
-    //     let x = count8(instruction.x().to_vec());
-    //     // TODO: option to incriment I while working
-
-    //     for offset in 0..=x {
-    //         self.memory.set(
-    //             self.index_register + offset as usize, 
-    //             self.variable_registers[offset as usize]
-    //         );
-    //     }
-    // }
-
-    // fn memory_to_register(&mut self, instruction: crate::Instruction) {
-    //     let x = count8(instruction.x().to_vec());
-    //     // TODO: option to incriment I while working
-
-    //     for offset in 0..=x {
-    //         self.variable_registers[offset as usize] = self.memory.get(self.index_register + offset as usize);
-    //     }
     // }
 }
 
@@ -184,6 +129,8 @@ where Renderer: chip8_traits::Renderer,
             self.screen_memory.as_mut(),
             &mut self.variable_registers,
             &mut self.index_register,
+            self.delay_timer.as_mut(),
+            self.sound_timer.as_mut(),
             self.random.as_mut(),
             self.font_start
         );
@@ -192,17 +139,18 @@ where Renderer: chip8_traits::Renderer,
             println!("While executing instruction: {}", error);
         }
 
-        let result = self.sound_timer.update();
+        // TODO: something seems broken that I can't do "use" and have to fully qualify or when that fails, cast
+        let result = (self.sound_timer.as_mut() as &mut dyn chip8_traits::Timer).update();
         if let Err(error) = result {
             return Err(error);
         }
 
-        let result = self.delay_timer.update();
+        // TODO: something seems broken that I can't do "use" and have to fully qualify or when that fails, cast
+        let result = (self.delay_timer.as_mut() as &mut dyn chip8_traits::Timer).update();
         if let Err(error) = result {
             return Err(error);
         }
 
-        // self.keypad.state();
         let result = self.renderer.render(self.screen_memory.iter());
         if let Err(error) = result {
             return Err(format!("{}", error));
