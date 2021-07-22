@@ -1,0 +1,32 @@
+name: Rust
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build rust-wasm
+      run: |
+        cd wasm
+        cargo build --verbose
+    - name: Build webpack
+      run: |
+        cd wasm/www
+        npm install
+        npm run build
+    - name: Deploy to Github Pages 🚀
+      uses: JamesIves/github-pages-deploy-action@4.1.4
+      with:
+        branch: gh-pages # The branch the action should deploy to.
+        folder: wasm/www/dist # The folder the action should deploy.
