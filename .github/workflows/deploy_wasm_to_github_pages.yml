@@ -17,11 +17,15 @@ jobs:
     steps:
     - name: Checkout 🛎️
       uses: actions/checkout@v2
+      
+    - name: Install wasm-pack
+      # uses: jetli/wasm-pack-action@f98777369a49686b132a9e8f0fdd59837bf3c3fd
+      uses: jetli/wasm-pack-action@v0.3.0
     
     - name: Build rust-wasm
       run: |
         cd wasm
-        cargo build --verbose
+        wasm-pack build
         
     - name: Build webpack
       run: |
