@@ -7,15 +7,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'chip-8'",
+            "name": "Debug executable 'chip8_console'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=chip-8",
-                    "--package=chip-8"
+                    "--bin=chip8_console",
+                    "--package=chip8_console"
                 ],
                 "filter": {
-                    "name": "chip-8",
+                    "name": "chip8_console",
                     "kind": "bin"
                 }
             },
@@ -25,16 +25,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'chip-8'",
+            "name": "Debug unit tests in executable 'chip8_console'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=chip-8",
-                    "--package=chip-8"
+                    "--bin=chip8_console",
+                    "--package=chip8_console"
                 ],
                 "filter": {
-                    "name": "chip-8",
+                    "name": "chip8_console",
                     "kind": "bin"
                 }
             },

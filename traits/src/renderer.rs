@@ -1,5 +1,6 @@
 use std::slice::Iter;
 
 pub trait Renderer {
-    fn render(&self, memory: Iter<Vec<bool>>) -> Result<(), &'static str> ;
+    // TODO: think up way to do without mutable
+    fn render(&mut self, memory: Iter<Vec<bool>>) -> Result<(), &'static str> ;
 }

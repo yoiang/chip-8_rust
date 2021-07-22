@@ -1,5 +1,3 @@
-use chip8_traits::ProgramCounter;
-
 use crate::{DelayTimer, Instruction, Memory, ProgramCounter, ScreenMemory, SoundTimer, Stack, VariableRegisters, instruction::{InstructionError}};
 
 type InstructionResult<T, Instruction: chip8_traits::Instruction> = std::result::Result<T, InstructionError<Instruction>>;
@@ -461,7 +459,7 @@ fn jump_v0(instruction: Instruction, program_counter: &mut ProgramCounter, varia
     });
 
     let value = chip8_traits::count16(chip8_traits::Instruction::nnn(&instruction).to_vec());
-    program_counter.set_position(value as usize + x_value as usize);
+    (program_counter as &mut dyn chip8_traits::ProgramCounter<Instruction>).set_position(value as usize + x_value as usize);
 
     Ok(())
 }
