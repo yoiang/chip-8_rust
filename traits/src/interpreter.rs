@@ -7,6 +7,8 @@ pub trait Interpreter {
 
     fn update(&mut self) -> Result<(), String>;
 
+    fn clear_screen(&mut self);
+
     fn dump_memory(&self) -> Vec<u8>;
 
     fn run(&mut self, frequency: Duration) -> Result<(), String> {

@@ -22,7 +22,7 @@ fn main() {
         if args.len() > 1 {
             args[1].as_str()
         } else {
-            "examples/Puzzle.ch8"
+            "programs/Puzzle.ch8"
         }
     };
     let result = interpreter.load_file(load_file_name, DEFAULT_PROGRAM_START);

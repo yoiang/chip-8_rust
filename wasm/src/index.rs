@@ -33,7 +33,7 @@ impl Index {
         let font = Font::new();
         interpreter.apply_font(font);
         
-        // let load_result = chip8_traits::Interpreter::load_file(&mut interpreter, "../../../examples/Puzzle.cb8", 500);
+        // let load_result = chip8_traits::Interpreter::load_file(&mut interpreter, "../../../programs/Puzzle.cb8", 500);
         // if let Err(error) = load_result {
         //     unsafe {
         //         console_log!("Error: while loading: {}", error);
@@ -73,6 +73,7 @@ impl Index {
         unsafe {
             console_log!("Loaded program {} bytes", program_length);
         }
+        chip8_traits::Interpreter::clear_screen(&mut self.interpreter);
     }
 
     pub fn update(&mut self) {

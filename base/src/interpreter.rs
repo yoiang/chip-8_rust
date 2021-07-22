@@ -1,4 +1,4 @@
-use std::{fs, usize};
+use std::{borrow::BorrowMut, fs, usize};
 
 use crate::{DelayTimer, SoundTimer, cpu::execute};
 
@@ -165,6 +165,10 @@ where Renderer: chip8_traits::Renderer,
         }
 
         Ok(())
+    }
+
+    fn clear_screen(&mut self) {
+        (self.screen_memory.as_mut() as &mut dyn chip8_traits::ScreenMemory).clear();
     }
 
     fn dump_memory(&self) -> Vec<u8> {
