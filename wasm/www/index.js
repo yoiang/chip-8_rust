@@ -28,7 +28,7 @@ if (newValue && typeof newValue.then == 'function') {
 }
 
 function loadProgram() {
-    return fetch('./IBM Logo.ch8')
+    return fetch('./Puzzle.ch8')
         .then((response) => {
             if (response.status !== 200) {
                 console.log('Looks like there was a problem. Status Code: ' + response.status);

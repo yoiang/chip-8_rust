@@ -1,3 +1,4 @@
+use chip8_base::Font;
 use chip8_traits::Interpreter;
 use wasm_bindgen::prelude::*;
 use std::{borrow::Borrow, cell::RefCell, fmt, panic, rc::Rc};
@@ -27,8 +28,11 @@ impl Index {
         
         let rendered_memory = Rc::new(RefCell::new(vec![]));
         let renderer = crate::renderer::Renderer::new(Rc::clone(&rendered_memory));
-        let interpreter = crate::interpreter::new(renderer);
+        let mut interpreter = crate::interpreter::new(renderer);
 
+        let font = Font::new();
+        interpreter.apply_font(font);
+        
         // let load_result = chip8_traits::Interpreter::load_file(&mut interpreter, "../../../examples/Puzzle.cb8", 500);
         // if let Err(error) = load_result {
         //     unsafe {
