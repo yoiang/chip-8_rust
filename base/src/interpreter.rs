@@ -1,4 +1,4 @@
-use std::{borrow::BorrowMut, fs, usize};
+use std::{fs, usize};
 
 use crate::{DelayTimer, SoundTimer, cpu::execute};
 

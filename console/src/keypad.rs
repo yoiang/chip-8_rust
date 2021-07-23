@@ -8,25 +8,12 @@ impl Keypad {
     }
 }
 
-// TODO:
-/*
-1	2	3	C
-4	5	6	D
-7	8	9	E
-A	0	B	F
-
-1	2	3	4
-Q	W	E	R
-A	S	D	F
-Z	X	C	V
-*/
-
 impl chip8_traits::Keypad for Keypad {
     fn state(&self) -> [bool; 16] {
         [false; 16]
     }
 
-    fn key_state(&self, key_index: usize) -> bool {
+    fn key_state(&self, _key_index: usize) -> bool {
         return false;
     }
 }

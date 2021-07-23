@@ -19,7 +19,5 @@ pub trait Interpreter {
             }
             sleep(frequency);
         }
-
-        Ok(())
     }
 }

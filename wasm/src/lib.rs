@@ -4,8 +4,6 @@ mod interpreter;
 mod random;
 mod keypad;
 mod index;
-mod extern_javascript;
-mod fetch;
 
 // use wasm_bindgen::prelude::*;
 
