@@ -1,7 +1,7 @@
 use chip8_base::Font;
 use chip8_traits::Interpreter;
 use wasm_bindgen::prelude::*;
-use std::{borrow::Borrow, cell::{Ref, RefCell}, fmt, panic, rc::Rc};
+use std::{borrow::Borrow, cell::{RefCell}, fmt, panic, rc::Rc};
 
 use crate::{renderer::fmt_rendered_memory, utils};
 
@@ -9,6 +9,15 @@ use crate::{renderer::fmt_rendered_memory, utils};
 macro_rules! console_log {
     ( $( $t:tt )* ) => {
         web_sys::console::log_1(&format!( $( $t )* ).into());
+    }
+}
+
+macro_rules! console_log_unsafe {
+    ( $( $t:tt )* ) => {
+        #[allow(unused_unsafe)] // Currently unsafe not properly recognized by analyzer
+        unsafe {
+            console_log!($( $t )*);
+        }
     }
 }
 
@@ -50,17 +59,13 @@ impl Index {
     pub fn load(&mut self, program: Vec<u8>) {
         let program_length = program.len();
         chip8_traits::Interpreter::load(&mut self.interpreter, program, DEFAULT_PROGRAM_START);
-        unsafe {
-            console_log!("Loaded program {} bytes", program_length);
-        }
+        console_log_unsafe!("Loaded program {} bytes", program_length);
         chip8_traits::Interpreter::clear_screen(&mut self.interpreter);
     }
 
     pub fn update(&mut self) {
         if let Err(error) = chip8_traits::Interpreter::update(&mut self.interpreter) {
-            unsafe {
-                console_log!("Error: while updating: {}", error);
-            }
+            console_log_unsafe!("Error: while updating: {}", error);
         }
     }
 
