@@ -1,4 +1,4 @@
-use std::{convert::TryInto, fmt::{self, Display}};
+use std::{convert::TryInto, fmt};
 
 pub struct Instruction {
     first: u8,
@@ -101,54 +101,3 @@ impl<Instruction: chip8_traits::Instruction> fmt::Display for InstructionError<I
         
     }
 }
-
-/*
-pub trait InstructionError<Instruction: chip8_traits::Instruction>: Display {
-    fn instruction() -> Instruction;
-}
-
-#[derive(Debug, Clone)]
-pub struct UnsupportedInstructionError<Instruction: chip8_traits::Instruction> {
-    instruction: Instruction
-}
-
-impl<Instruction: chip8_traits::Instruction> InstructionError<Instruction> for UnsupportedInstructionError<Instruction> { 
-    
-}
-
-impl<Instruction: chip8_traits::Instruction> UnsupportedInstructionError<Instruction> {
-    pub fn new(instruction: Instruction) -> UnsupportedInstructionError<Instruction> {
-        UnsupportedInstructionError {
-            instruction
-        }
-    }
-}
-
-impl<Instruction: chip8_traits::Instruction> fmt::Display for UnsupportedInstructionError<Instruction> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Unsupported instruction '{}'", self.instruction)
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct InstructionExecuteError<Instruction: chip8_traits::Instruction> {
-    instruction: Instruction
-}
-
-impl<Instruction: chip8_traits::Instruction> InstructionError<Instruction> for InstructionExecuteError<Instruction> { 
-    
-}
-
-impl<Instruction: chip8_traits::Instruction> InstructionExecuteError<Instruction> {
-    pub fn new(instruction: Instruction) -> InstructionExecuteError<Instruction> {
-        InstructionExecuteError {
-            instruction
-        }
-    }
-}
-
-impl<Instruction: chip8_traits::Instruction> fmt::Display for InstructionExecuteError<Instruction> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Issue when executing instruction '{}'", self.instruction)
-    }
-}*/

@@ -1,3 +1,4 @@
 pub trait Keypad {
-    fn state(&mut self) -> (u8, u8);
+    fn state(&self) -> [bool; 16];
+    fn key_state(&self, key_index: usize) -> bool;
 }

@@ -1,28 +1,28 @@
+use std::{cell::RefCell, rc::Rc};
+
 pub struct Keypad {
+    key_pressed: Rc<RefCell<[bool; 16]>>
 }
 
 impl Keypad {
-    pub fn new() -> Keypad {
+    pub fn new(key_pressed: Rc<RefCell<[bool; 16]>>) -> Keypad {
         Keypad {
+            key_pressed
         }
     }
 }
 
-// TODO:
-/*
-1	2	3	C
-4	5	6	D
-7	8	9	E
-A	0	B	F
-
-1	2	3	4
-Q	W	E	R
-A	S	D	F
-Z	X	C	V
-*/
-
 impl chip8_traits::Keypad for Keypad {
-    fn state(&mut self) -> (u8, u8) {
-        (0, 0)
+    fn state(&self) -> [bool; 16] {
+        return (self.key_pressed.borrow()).clone();
+    }
+
+    fn key_state(&self, key_index: usize) -> bool {
+        let key_pressed = *(self.key_pressed.borrow());
+        if key_index < key_pressed.len() {
+            return key_pressed[key_index];
+        }
+        
+        return false;
     }
 }

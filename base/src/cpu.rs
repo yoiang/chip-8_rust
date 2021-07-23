@@ -3,13 +3,14 @@ use crate::{DelayTimer, Instruction, Memory, ProgramCounter, ScreenMemory, Sound
 type InstructionResult<T, Instruction: chip8_traits::Instruction> = std::result::Result<T, InstructionError<Instruction>>;
 type ExecuteResult = InstructionResult<(), Instruction>;
 
-pub fn execute<Random: chip8_traits::Random> (
+pub fn execute<Keypad: chip8_traits::Keypad, Random: chip8_traits::Random> (
     instruction: Instruction, 
     program_counter: &mut ProgramCounter,
     stack: &mut Stack,
     memory: &mut Memory,
     screen_memory: &mut ScreenMemory,
     variable_registers: &mut VariableRegisters,
+    keypad: &Keypad,
     index_register: &mut usize,
     delay_timer: &mut DelayTimer,
     sound_timer: &mut SoundTimer,
@@ -53,13 +54,20 @@ pub fn execute<Random: chip8_traits::Random> (
         0x0b => return jump_v0(instruction, program_counter, variable_registers), // TODO: optional BXNN
         0x0c => return set_register_random(instruction, variable_registers, random),
         0x0d => return display(instruction, index_register, variable_registers, memory, screen_memory),
-        // 0x0e => {}, // TODO: skip if key
+        0x0e => {
+            let nn = chip8_traits::count8(chip8_traits::Instruction::nn(&instruction).to_vec());
+            match nn {
+                0x9e => return skip_if_pressed(instruction, keypad, variable_registers, program_counter),
+                0xa1 => return skip_if_not_pressed(instruction, keypad, variable_registers, program_counter),
+                _ => return Err(InstructionError::UnsupportedInstructionError(instruction))
+            }
+        },
         0x0f => {
             let nn = chip8_traits::count8(chip8_traits::Instruction::nn(&instruction).to_vec());
             match nn {
                 0x07 | 0x15 | 0x18 => return set_timer(instruction, variable_registers, delay_timer, sound_timer),
                 0x1e => return add_to_index(instruction, variable_registers, index_register),
-                // 0x0a => get_key(instruction),
+                0x0a => return wait_for_key(instruction, keypad, variable_registers, program_counter),
                 0x29 => return font_character(instruction, variable_registers, index_register, font_start),
                 0x33 => return binary_to_decimal(instruction, variable_registers, memory, index_register),
                 0x55 => return register_to_memory(instruction, variable_registers, memory, *index_register),
@@ -506,7 +514,45 @@ fn display(instruction: Instruction, index_register: &usize, variable_registers:
     Ok(())
 }
 
-fn set_timer(instruction: crate::Instruction, variable_registers: &mut VariableRegisters, delay_timer: &mut DelayTimer, sound_timer: &mut SoundTimer) -> ExecuteResult {
+fn skip_if_pressed<Keypad: chip8_traits::Keypad, ProgramCounter: chip8_traits::ProgramCounter<Instruction>>(
+    instruction: Instruction, 
+    keypad: &Keypad, 
+    variable_registers: &VariableRegisters, 
+    program_counter: &mut ProgramCounter
+) -> ExecuteResult {
+    let x = chip8_traits::count8(chip8_traits::Instruction::x(&instruction).to_vec());
+    
+    guard!(let Some(x_value) = variable_registers.get(x) else {
+        return Err(InstructionError::InstructionExecuteError(instruction));
+    });
+
+    if keypad.key_state(x_value as usize) {
+        program_counter.skip();
+    }
+
+    Ok(())
+}
+
+fn skip_if_not_pressed<Keypad: chip8_traits::Keypad, ProgramCounter: chip8_traits::ProgramCounter<Instruction>>(
+    instruction: Instruction, 
+    keypad: &Keypad, 
+    variable_registers: &VariableRegisters, 
+    program_counter: &mut ProgramCounter
+) -> ExecuteResult {
+    let x = chip8_traits::count8(chip8_traits::Instruction::x(&instruction).to_vec());
+    
+    guard!(let Some(x_value) = variable_registers.get(x) else {
+        return Err(InstructionError::InstructionExecuteError(instruction));
+    });
+
+    if keypad.key_state(x_value as usize) == false {
+        program_counter.skip();
+    }
+
+    Ok(())
+}
+
+fn set_timer(instruction: Instruction, variable_registers: &mut VariableRegisters, delay_timer: &mut DelayTimer, sound_timer: &mut SoundTimer) -> ExecuteResult {
     let x_value = chip8_traits::count8(chip8_traits::Instruction::x(&instruction).to_vec());
 
     match chip8_traits::count8(chip8_traits::Instruction::nn(&instruction).to_vec()) {
@@ -544,6 +590,25 @@ fn add_to_index(instruction: crate::Instruction, variable_registers: &VariableRe
     });
     // TODO: Amiga intepreter marks overflow option
     (*index_register) += x_value as usize;
+
+    Ok(())
+}
+
+fn wait_for_key(instruction: crate::Instruction, keypad: &dyn chip8_traits::Keypad, variable_registers: &mut VariableRegisters, program_counter: &mut ProgramCounter) -> ExecuteResult {
+    let x = chip8_traits::count8(chip8_traits::Instruction::x(&instruction).to_vec());
+
+    let keypad_state = keypad.state();
+    for index in 0..keypad_state.len() {
+        if keypad_state[index] {
+            if let Err(_) = variable_registers.set(x, index as u8) {
+                (program_counter as &mut dyn chip8_traits::ProgramCounter<Instruction>).go_back();
+                return Err(InstructionError::InstructionExecuteError(instruction));
+            }
+            break;
+        } else {
+            (program_counter as &mut dyn chip8_traits::ProgramCounter<Instruction>).go_back();
+        }
+    }
 
     Ok(())
 }

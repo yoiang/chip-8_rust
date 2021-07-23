@@ -14,6 +14,86 @@ const renderLoop = () => {
     requestAnimationFrame(renderLoop);
 };
 
+const keypadState = [
+    false, false, false, false,
+    false, false, false, false,
+    false, false, false, false,
+    false, false, false, false,
+];
+
+// TODO: flexible key mapping
+const getKeyOffset = (key) => {
+    switch(key) {
+        case "1":
+        return 0;
+
+        case "2":
+        return 1;
+
+        case "3":
+        return 2;
+
+        case "4":
+        return 3;
+
+
+        case "q":
+        return 4;
+
+        case "w":
+        return 5;
+
+        case "e":
+        return 6;
+
+        case "r":
+        return 7;
+
+
+        case "a":
+        return 8;
+
+        case "s":
+        return 9;
+
+        case "d":
+        return 10;
+
+        case "f":
+        return 11;
+
+
+        case "z":
+        return 12;
+
+        case "x":
+        return 13;
+
+        case "c":
+        return 14;
+
+        case "v":
+        return 15;
+    }
+}
+
+const setKeyState = (key, value) => {
+    const offset = getKeyOffset(key);
+    keypadState[offset] = value;
+}
+
+const handleKeydownEvent = (event) => {
+    const key = event.key;
+    setKeyState(key, true);
+    index.update_keypad(keypadState);
+}
+
+const handleKeyupEvent = (event) => {
+    const key = event.key;
+    setKeyState(key, false);
+    index.update_keypad(keypadState);
+}
+
 const setIndex = (newIndex) => {
     if (indexReady) {
         console.error("setIndex called by index already set: ", newIndex);
@@ -22,6 +102,9 @@ const setIndex = (newIndex) => {
 
     index = newIndex;
     indexReady = true;
+
+    document.addEventListener('keydown', handleKeydownEvent);
+    document.addEventListener('keyup', handleKeyupEvent);
 
     requestAnimationFrame(renderLoop);
 };

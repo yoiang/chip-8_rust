@@ -1,9 +1,9 @@
 use chip8_base::Font;
 use chip8_traits::Interpreter;
 use wasm_bindgen::prelude::*;
-use std::{borrow::Borrow, cell::RefCell, fmt, panic, rc::Rc};
+use std::{borrow::Borrow, cell::{Ref, RefCell}, fmt, panic, rc::Rc};
 
-use crate::{fetch::fetch_body, renderer::fmt_rendered_memory, utils};
+use crate::{renderer::fmt_rendered_memory, utils};
 
 // A macro to provide `println!(..)`-style syntax for `console.log` logging.
 macro_rules! console_log {
@@ -15,6 +15,8 @@ macro_rules! console_log {
 #[wasm_bindgen]
 pub struct Index {
     rendered_memory: Rc<RefCell<Vec<Vec<bool>>>>,
+    keypad_state: Rc<RefCell<[bool; 16]>>,
+
     interpreter: chip8_base::Interpreter<crate::renderer::Renderer, crate::keypad::Keypad, crate::random::Random>,
 }
 
@@ -28,41 +30,19 @@ impl Index {
         
         let rendered_memory = Rc::new(RefCell::new(vec![]));
         let renderer = crate::renderer::Renderer::new(Rc::clone(&rendered_memory));
-        let mut interpreter = crate::interpreter::new(renderer);
+
+        let keypad_state = Rc::new(RefCell::new([false; 16]));
+        let keypad = crate::keypad::Keypad::new(Rc::clone(&keypad_state));
+        
+        let mut interpreter = crate::interpreter::new(renderer, keypad);
 
         let font = Font::new();
         interpreter.apply_font(font);
-        
-        // let load_result = chip8_traits::Interpreter::load_file(&mut interpreter, "../../../programs/Puzzle.cb8", 500);
-        // if let Err(error) = load_result {
-        //     unsafe {
-        //         console_log!("Error: while loading: {}", error);
-        //     }
-        // }
-
-        // let load_result = fetch_body("http://localhost:8080/Puzzle.ch8".to_string()).await;
-        // match load_result {
-        //     Ok(program) => {
-        //         if program.len() > 0 {
-        //             unsafe {
-        //                 console_log!("Loaded program {} bytes", program.len());
-        //             }
-        //             chip8_traits::Interpreter::load(&mut interpreter, program, DEFAULT_PROGRAM_START);
-        //         } else {
-        //             unsafe {
-        //                 console_log!("Unknown error loading program");
-        //             }
-        //         }
-        //     },
-        //     Err(error) => {
-        //         unsafe {
-        //             console_log!("Error: while loading: {:?}", error);
-        //         }
-        //     }
-        // }
 
         Index {
             rendered_memory,
+            keypad_state,
+
             interpreter,
         }
     }
@@ -86,6 +66,19 @@ impl Index {
 
     pub fn render_text(&self) -> String {
         self.to_string()
+    }
+
+    pub fn update_keypad(&mut self, update: Vec<u8>) {
+        let mut update_normalized = [false; 16];
+
+        for (index, value) in update.iter().enumerate() {
+            if index >= update_normalized.len() {
+                break;
+            }
+            update_normalized[index] = *value > 0;
+        }
+
+        (*self.keypad_state.borrow_mut()) = update_normalized;
     }
 
     pub fn dump_memory(&self) -> String {
