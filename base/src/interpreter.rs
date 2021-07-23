@@ -83,21 +83,20 @@ where Renderer: chip8_traits::Renderer,
     fn fetch(&mut self) -> Box<crate::Instruction> {
         chip8_traits::ProgramCounter::read(&mut self.program_counter, self.memory.as_ref())
     }
+
+    fn reset(&mut self) {
+        self.memory.clear();
+        self.variable_registers.reset();
+        self.index_register = 0;
+        self.sound_timer.reset();
+        self.delay_timer.reset();
+    }
 }
 
 impl<Renderer, Keypad, Random> Interpreter<Renderer, Keypad, Random> 
 where Renderer: chip8_traits::Renderer, 
     Keypad: chip8_traits::Keypad,
     Random: chip8_traits::Random {
-
-
-    // fn get_key(&mut self, instruction: crate::Instruction) {
-    //     let x = count8(instruction.x().to_vec());
-    // }
-
-    // fn binary_to_decimal(&mut self, instruction: crate::Instruction) {
-    // }
-
     pub fn dump_program_counter(&self) -> usize {
         chip8_traits::ProgramCounter::<crate::Instruction>::get_position(&self.program_counter)
     }
@@ -108,6 +107,8 @@ where Renderer: chip8_traits::Renderer,
     Keypad: chip8_traits::Keypad,
     Random: chip8_traits::Random {
     fn load(&mut self, program: Vec<u8>, start_position: usize) {
+        self.reset();
+        
         for (index, value) in program.iter().enumerate() {
             chip8_traits::Memory::set(self.memory.as_mut(), start_position + index, *value);
         }

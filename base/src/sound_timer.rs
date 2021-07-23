@@ -8,6 +8,10 @@ impl SoundTimer {
             value: 0
         }
     }
+
+    pub fn reset(&mut self) {
+        self.value = 0;
+    }
 }
 
 impl chip8_traits::Timer for SoundTimer {

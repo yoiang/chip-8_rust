@@ -11,6 +11,10 @@ impl VariableRegisters {
         }
     }
 
+    pub fn reset(&mut self) {
+        self.value = [0; 16];
+    }
+
     pub fn get(&self, index: u8) -> Option<u8> {
         self.value.get(index as usize).cloned()
     }

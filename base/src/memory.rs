@@ -10,6 +10,10 @@ impl Memory {
             contents: vec![0; size]
         }
     }
+
+    pub fn clear(&mut self) {
+        self.contents = vec![0; self.contents.len()];
+    }
 }
 
 impl chip8_traits::Memory for Memory {

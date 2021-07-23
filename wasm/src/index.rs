@@ -1,7 +1,7 @@
 use chip8_base::Font;
 use chip8_traits::Interpreter;
 use wasm_bindgen::prelude::*;
-use std::{borrow::Borrow, cell::{RefCell}, fmt, panic, rc::Rc};
+use std::{borrow::Borrow, cell::{RefCell}, fmt, rc::Rc};
 
 use crate::{renderer::fmt_rendered_memory, utils};
 
