@@ -609,26 +609,26 @@ fn set_timer<
     let x_value = chip8_traits::count8(instruction.x().to_vec());
 
     match chip8_traits::count8(instruction.nn().to_vec()) {
-        7 => {
-            let value = (delay_timer as &mut dyn chip8_traits::Timer).value();
+        0x07 => {
+            let value = (delay_timer as &mut dyn chip8_traits::Timer).get();
 
             if let Err(_) = variable_registers.set(x_value, value) {
                 return Err(InstructionError::InstructionExecuteError(instruction));
             }
         },
-        15 => {
+        0x15 => {
             guard!(let Some(value) = variable_registers.get(x_value) else {
                 return Err(InstructionError::InstructionExecuteError(instruction));
             });
 
-            (delay_timer as &mut dyn chip8_traits::Timer).set_value(value);
+            (delay_timer as &mut dyn chip8_traits::Timer).set(value);
         },
-        18 => {
+        0x18 => {
             guard!(let Some(value) = variable_registers.get(x_value) else {
                 return Err(InstructionError::InstructionExecuteError(instruction));
             });
 
-            (sound_timer as &mut dyn chip8_traits::Timer).set_value(value);
+            (sound_timer as &mut dyn chip8_traits::Timer).set(value);
         }
         _ => return Err(InstructionError::InstructionExecuteError(instruction))
     }
