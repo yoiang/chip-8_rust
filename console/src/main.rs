@@ -15,8 +15,6 @@ fn main() {
     let args: Vec<String> = env::args().collect();
 
     let mut interpreter = interpreter::new();
-    let font = Font::new();
-    interpreter.apply_font(font);
 
     let load_file_name = {
         if args.len() > 1 {
