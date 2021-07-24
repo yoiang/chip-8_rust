@@ -1,4 +1,4 @@
-use chip8_base::{DelayTimer, Memory, ProgramCounter, ScreenMemory, SoundTimer, Stack};
+use chip8_base::{DelayTimer, Font, Memory, ProgramCounter, ScreenMemory, SoundTimer, Stack};
 
 pub fn new(renderer: crate::renderer::Renderer, keypad: crate::keypad::Keypad) -> chip8_base::Interpreter<crate::renderer::Renderer, crate::keypad::Keypad, crate::random::Random> {
     chip8_base::Interpreter::new(
@@ -19,5 +19,7 @@ pub fn new(renderer: crate::renderer::Renderer, keypad: crate::keypad::Keypad) -
         ProgramCounter::new(),
 
         Box::new(crate::random::Random::new()),
+
+        Font::new(),
     )
 }

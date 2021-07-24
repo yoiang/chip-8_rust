@@ -43,10 +43,7 @@ impl Index {
         let keypad_state = Rc::new(RefCell::new([false; 16]));
         let keypad = crate::keypad::Keypad::new(Rc::clone(&keypad_state));
         
-        let mut interpreter = crate::interpreter::new(renderer, keypad);
-
-        let font = Font::new();
-        interpreter.apply_font(font);
+        let interpreter = crate::interpreter::new(renderer, keypad);
 
         Index {
             rendered_memory,
