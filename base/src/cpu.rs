@@ -22,7 +22,6 @@ pub fn execute<
     random: &mut Random,
     font_start: usize
 ) -> ExecuteResult<Instruction> {
-
     let count = chip8_traits::count8(instruction.w().to_vec());
 
     match count {
@@ -30,7 +29,7 @@ pub fn execute<
             let nn = chip8_traits::count8(instruction.nn().to_vec());
             match nn {
                 0xe0 => clear_screen(screen_memory),
-                0xee => pop_stack(stack, program_counter),
+                0xee => return pop_stack(instruction, stack, program_counter),
                 _ => return Err(InstructionError::UnsupportedInstructionError(instruction)) // TODO: 0x0nnn
             }
         },
@@ -168,22 +167,23 @@ fn push_stack<
     ProgramCounter: chip8_traits::ProgramCounter<Instruction>
 > (instruction: Instruction, stack: &mut Stack, program_counter: &mut ProgramCounter) {
     stack.push(program_counter.get_position());
-    let count = chip8_traits::count16(instruction.nnn().to_vec());
-    program_counter.set_position(count as usize);
+    let new_position = chip8_traits::count16(instruction.nnn().to_vec());
+    program_counter.set_position(new_position as usize);
 }
 
 fn pop_stack<
     Instruction: chip8_traits::Instruction,
     Stack: chip8_traits::Stack,
     ProgramCounter: chip8_traits::ProgramCounter<Instruction>
-> (stack: &mut Stack, program_counter: &mut ProgramCounter) {
+> (instruction: Instruction, stack: &mut Stack, program_counter: &mut ProgramCounter) -> ExecuteResult<Instruction> {
     let result = stack.pop();
     match result {
-        Some(value) =>  program_counter.set_position(value),
-        None => {
-            // TODO: return ERR
-            println!("Stack underflow");
+        Some(value) => {
+            program_counter.set_position(value);
+
+            Ok(())
         }
+        None => Err(InstructionError::InstructionExecuteError(instruction))
     }
 }
 
@@ -656,16 +656,22 @@ fn wait_for_key<
     let x = chip8_traits::count8(instruction.x().to_vec());
 
     let keypad_state = keypad.state();
+    
+    let mut key_down = false;
     for index in 0..keypad_state.len() {
         if keypad_state[index] {
-            if let Err(_) = variable_registers.set(x, index as u8) {
-                (program_counter as &mut dyn chip8_traits::ProgramCounter<Instruction>).go_back();
+            let result = variable_registers.set(x, index as u8);
+            if let Err(_) = result {
                 return Err(InstructionError::InstructionExecuteError(instruction));
             }
+
+            key_down = true;
             break;
-        } else {
-            (program_counter as &mut dyn chip8_traits::ProgramCounter<Instruction>).go_back();
         }
+    }
+
+    if !key_down {
+        (program_counter as &mut dyn chip8_traits::ProgramCounter<Instruction>).go_back();
     }
 
     Ok(())
