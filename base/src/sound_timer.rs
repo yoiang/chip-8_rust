@@ -15,11 +15,11 @@ impl SoundTimer {
 }
 
 impl chip8_traits::Timer for SoundTimer {
-    fn value(&self) -> u8 {
+    fn get(&self) -> u8 {
         self.value
     }
 
-    fn set_value(&mut self, value: u8) {
+    fn set(&mut self, value: u8) {
         self.value = value;
     }
 
