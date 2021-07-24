@@ -27,6 +27,14 @@ impl Font {
     }
 }
 
+impl Clone for Font {
+    fn clone(&self) -> Self {
+        Font {
+            contents: self.contents.clone()
+        }
+    }
+}
+
 impl chip8_traits::Font for Font {
     fn apply(&self, memory: &mut dyn chip8_traits::Memory, start: usize) {
         let mut offset = start;

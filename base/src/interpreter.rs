@@ -25,6 +25,7 @@ where Renderer: chip8_traits::Renderer,
 
     variable_registers: crate::VariableRegisters,
 
+    font: crate::Font,
     font_start: usize,
 
     random: Box<Random>,
@@ -48,6 +49,8 @@ where Renderer: chip8_traits::Renderer,
         program_counter: crate::ProgramCounter,
 
         random: Box<Random>,
+
+        font: crate::Font,
     ) -> Interpreter<Renderer, Keypad, Random> {
         Interpreter {
             memory,
@@ -70,9 +73,11 @@ where Renderer: chip8_traits::Renderer,
     
             variable_registers: crate::VariableRegisters::new(),
     
+            font,
             font_start: 0x050,
     
             random,
+
         }
     }
 
@@ -86,6 +91,7 @@ where Renderer: chip8_traits::Renderer,
 
     fn reset(&mut self) {
         self.memory.clear();
+        self.apply_font(self.font.clone());
         self.variable_registers.reset();
         self.index_register = 0;
         self.sound_timer.reset();
@@ -130,6 +136,7 @@ where Renderer: chip8_traits::Renderer,
 
     fn update(&mut self) -> Result<(), String> {
         let instruction = self.fetch();
+        
         let result = execute(
             *instruction.as_ref(), 
             &mut self.program_counter, 
