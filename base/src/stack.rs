@@ -8,6 +8,10 @@ impl Stack {
             contents: vec![]
         } 
     }
+
+    pub fn is_empty(&self) -> bool {
+        return self.contents.len() == 0;
+    }
 }
 
 impl chip8_traits::Stack for Stack {

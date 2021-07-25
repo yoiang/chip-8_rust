@@ -5,6 +5,8 @@ pub struct Instruction {
     second: u8
 }
 
+// TODO: remove panics
+// TODO: double check trading in [bool; x]s vs one or two bytes from a design perspective
 impl Instruction {
 
     pub fn new(first: u8, second: u8) -> Instruction {

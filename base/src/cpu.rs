@@ -155,12 +155,14 @@ fn skip<
     Ok(())
 }
 
+/// Sets entire screen memory to 0x00
 fn clear_screen<
     ScreenMemory: chip8_traits::ScreenMemory
 > (screen_memory: &mut ScreenMemory) {
     screen_memory.clear();
 }
 
+/// Pushes the location after the "Push Stack" instruction into the stack and sets the program counter to the location NNN 
 fn push_stack<
     Instruction: chip8_traits::Instruction,
     Stack: chip8_traits::Stack,
@@ -745,4 +747,62 @@ fn memory_to_register<
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod cpu_tests {
+    use crate::{Instruction, ProgramCounter, ScreenMemory, Stack, cpu::{clear_screen, push_stack}};
+
+
+    // TODO: test execute
+
+    // TODO: test skip
+    // #[test]
+    // fn skip_test() {
+    //     let instruction: Instruction = Instruction::new(first, second)
+    // } 
+
+    fn is_empty(screen_memory: &ScreenMemory) -> bool {
+        for value in screen_memory.iter() {
+            if value[0] {
+                return false;
+            } 
+        }
+        return true;
+    }
+
+    #[test]
+    fn clear_screen_test() {
+        let mut screen_memory = ScreenMemory::new(10, 10);
+        chip8_traits::ScreenMemory::display(&mut screen_memory, 0, 0, [0xff, 0x13, 0x53, 0x5a].iter(), 4);
+
+        assert_eq!(is_empty(&screen_memory), false);
+        
+        clear_screen(&mut screen_memory);
+        
+        assert_eq!(is_empty(&screen_memory), true);
+    }
+
+    #[test]
+    fn push_stack_test() {
+        let mut stack = Stack::new();
+        let mut program_counter = ProgramCounter::new();
+
+        assert_eq!(stack.is_empty(), true);
+        assert_eq!(chip8_traits::ProgramCounter::<Instruction>::get_position(&program_counter), 0);
+
+        push_stack(Instruction::new(0x01, 0x23), &mut stack, &mut program_counter);
+
+        assert_eq!(stack.is_empty(), false);
+        assert_eq!(chip8_traits::Stack::pop(&mut stack), Some(0x0));
+
+        assert_eq!(chip8_traits::ProgramCounter::<Instruction>::get_position(&program_counter), 0x0123);
+
+        push_stack(Instruction::new(0x14, 0x56), &mut stack, &mut program_counter);
+
+        assert_eq!(stack.is_empty(), false);
+        assert_eq!(chip8_traits::Stack::pop(&mut stack), Some(0x0123));
+
+        assert_eq!(chip8_traits::ProgramCounter::<Instruction>::get_position(&program_counter), 0x0456);
+    }
 }
