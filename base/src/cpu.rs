@@ -394,7 +394,7 @@ fn set_x_right_shifted_y<
     });
 
     let flag = {
-        if y_value & 1 > 0 {
+        if y_value & 0x01 > 0 {
             1
         } else {
             0
@@ -467,7 +467,7 @@ fn set_x_left_shifted_y<
     });
 
     let flag = {
-        if y_value & 128 > 0 {
+        if y_value & 0x0f > 0 {
             1
         } else {
             0
