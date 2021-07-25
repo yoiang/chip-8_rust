@@ -12,7 +12,7 @@ impl Count8 for [bool; 4] {
                 result += place;
             }
             
-            if place == 128 { // TODO: come up with better solution
+            if place == 8 { // TODO: come up with better solution
                 break;
             }
             place *= 2;
@@ -56,7 +56,7 @@ impl Count16 for [bool; 12] {
                 result += place;
             }
             
-            if place == 32768 { // TODO: come up with better solution
+            if place == 4095 { // TODO: come up with better solution
                 break;
             }
             place *= 2;
