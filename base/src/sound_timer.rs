@@ -15,7 +15,7 @@ impl SoundTimer {
 }
 
 impl chip8_traits::Timer for SoundTimer {
-    fn get(&self) -> u8 {
+    fn get(&mut self) -> u8 {
         self.value
     }
 
@@ -23,21 +23,21 @@ impl chip8_traits::Timer for SoundTimer {
         self.value = value;
     }
 
-    fn update(&mut self) -> Result<(), String> {
-        // TODO: only call beep if changed
-        if self.value > 0 {
-            self.value -= 1;
-            print!("\x07\r");
-            // let result = beep(440);
-            // if let Err(error) = result {
-            //     return Err(format!("{}", error));
-            // }
-        // } else {
-        //     let result = beep(0);
-        //     if let Err(error) = result {
-        //         return Err(format!("{}", error));
-        //     }
-        }
-        Ok(())
-    }
+    // fn update(&mut self) -> Result<(), String> {
+    //     // TODO: only call beep if changed
+    //     if self.value > 0 {
+    //         self.value -= 1;
+    //         print!("\x07\r");
+    //         // let result = beep(440);
+    //         // if let Err(error) = result {
+    //         //     return Err(format!("{}", error));
+    //         // }
+    //     // } else {
+    //     //     let result = beep(0);
+    //     //     if let Err(error) = result {
+    //     //         return Err(format!("{}", error));
+    //     //     }
+    //     }
+    //     Ok(())
+    // }
 }

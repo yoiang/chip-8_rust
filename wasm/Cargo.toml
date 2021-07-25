@@ -25,6 +25,7 @@ chip8_traits = { path = "../traits" }
 chip8_base = { path = "../base" }
 wasm-streams = "0.2.0"
 futures = "0.3.15"
+wasm-bindgen-threads-xform = "0.2.72"
 
 # `wee_alloc` is a tiny allocator for wasm that is only ~1K in code size
 # compared to the default allocator's ~10K. It is slower than the default
@@ -43,6 +44,7 @@ features = [
   "RequestMode",
   "Response",
   "Window",
+  "Worker",
   "ReadableStream",
 ]
 

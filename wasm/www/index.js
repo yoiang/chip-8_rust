@@ -107,6 +107,10 @@ const setIndex = (newIndex) => {
     document.addEventListener('keyup', handleKeyupEvent);
 
     requestAnimationFrame(renderLoop);
+
+    if (programsListReady) {
+        programsListElementSelectedIndex(0);
+    }
 };
 
 const loadProgram = (fileName) => {
@@ -151,6 +155,9 @@ const createProgramsListOption = (programsListItem) => {
 }
 
 const programsListElementSelectedIndex = (index) => {
+    if (!index) {
+        return;
+    }
     // TODO: check out of bounds
     const program = programsList[index]
     loadProgram(`./${program.file}`);
@@ -218,17 +225,3 @@ if (newValue && typeof newValue.then == 'function') {
     setIndex(newValue);
 }
 
-
-/*
-        <option value="B3/S23">Life (B3/S23)</option>
-        <option value="B2/S">Seeds (B2/S)</option>
-        <option value="B1357/S1357">Replicator (B1357/S1357)</option>
-        <option value="B0/S0">Radioactive Bacteria (B0/S0)</option>
-        <option value="B0/S15">Ancient Techno (B0/S15)</option>
-        <option value="B3/S012345678">Life Without Death (B3/S012345678)</option>
-        <option value="B3/S1234">Mazectric (B3/S1234)</option>
-        <option value="B36/S23">HighLife (B36/S23)</option>
-        <option value="B3678/S34678">Day & Night (B3678/S34678)</option>
-        <option value="B38/S23">Pedestrian Life (B38/S23)</option>
-        <option value="custom">Custom</option>
-        */

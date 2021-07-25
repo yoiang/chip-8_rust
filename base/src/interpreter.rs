@@ -1,8 +1,8 @@
-use std::{fs, usize};
+use std::{borrow::Borrow, fs, usize};
 
 use crate::{DelayTimer, SoundTimer, cpu::execute};
 
-pub struct Interpreter<Renderer, Keypad, Random> 
+pub struct Interpreter<Renderer, Keypad, Random>
 where Renderer: chip8_traits::Renderer, 
     Keypad: chip8_traits::Keypad,
     Random: chip8_traits::Random {
@@ -156,17 +156,17 @@ where Renderer: chip8_traits::Renderer,
             println!("While executing instruction: {}", error);
         }
 
-        // TODO: something seems broken that I can't do "use" and have to fully qualify or when that fails, cast
-        let result = (self.sound_timer.as_mut() as &mut dyn chip8_traits::Timer).update();
-        if let Err(error) = result {
-            return Err(error);
-        }
+        // // TODO: something seems broken that I can't do "use" and have to fully qualify or when that fails, cast
+        // let result = (self.sound_timer.as_mut() as &mut dyn chip8_traits::Timer).update();
+        // if let Err(error) = result {
+        //     return Err(error);
+        // }
 
-        // TODO: something seems broken that I can't do "use" and have to fully qualify or when that fails, cast
-        let result = (self.delay_timer.as_mut() as &mut dyn chip8_traits::Timer).update();
-        if let Err(error) = result {
-            return Err(error);
-        }
+        // // TODO: something seems broken that I can't do "use" and have to fully qualify or when that fails, cast
+        // let result = (self.delay_timer.as_mut() as &mut dyn chip8_traits::Timer).update();
+        // if let Err(error) = result {
+        //     return Err(error);
+        // }
 
         let result = self.renderer.render(self.screen_memory.iter());
         if let Err(error) = result {
