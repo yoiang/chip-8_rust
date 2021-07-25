@@ -7,6 +7,8 @@ pub mod interpreter;
 pub use self::interpreter::Interpreter;
 pub mod instruction;
 pub use self::instruction::Instruction;
+pub mod math;
+pub use self::math::*;
 pub mod memory;
 pub use self::memory::Memory;
 pub mod out_of_bounds_error;

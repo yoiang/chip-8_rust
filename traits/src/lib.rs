@@ -6,8 +6,6 @@ pub mod interpreter;
 pub use self::interpreter::Interpreter;
 pub mod keypad;
 pub use self::keypad::Keypad;
-pub mod math;
-pub use self::math::*;
 pub mod memory;
 pub use self::memory::Memory;
 pub mod program_counter;

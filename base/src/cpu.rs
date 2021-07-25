@@ -1,4 +1,4 @@
-use crate::{DelayTimer, Memory, ScreenMemory, SoundTimer, Stack, VariableRegisters, instruction::{InstructionError}};
+use crate::{DelayTimer, Memory, ScreenMemory, SoundTimer, Stack, VariableRegisters, count16, count8, instruction::{InstructionError}};
 
 type InstructionResult<T, Instruction> = std::result::Result<T, InstructionError<Instruction>>;
 type ExecuteResult<Instruction> = InstructionResult<(), Instruction>;
@@ -22,11 +22,11 @@ pub fn execute<
     random: &mut Random,
     font_start: usize
 ) -> ExecuteResult<Instruction> {
-    let count = chip8_traits::count8(instruction.w().to_vec());
+    let count = count8(instruction.w().to_vec());
 
     match count {
         0x00 => {
-            let nn = chip8_traits::count8(instruction.nn().to_vec());
+            let nn = count8(instruction.nn().to_vec());
             match nn {
                 0xe0 => clear_screen(screen_memory),
                 0xee => return pop_stack(instruction, stack, program_counter),
@@ -39,7 +39,7 @@ pub fn execute<
         0x06 => return set_register(instruction, variable_registers),
         0x07 => return add_to_register(instruction, variable_registers),
         0x08 => {
-            let n = chip8_traits::count8(instruction.n().to_vec());
+            let n = count8(instruction.n().to_vec());
             match n {
                 0x00 => return set_x_value_of_y(instruction, variable_registers),
                 0x01 => return or_x_value_of_y(instruction, variable_registers),
@@ -59,7 +59,7 @@ pub fn execute<
         0x0c => return set_register_random(instruction, variable_registers, random),
         0x0d => return display(instruction, index_register, variable_registers, memory, screen_memory),
         0x0e => {
-            let nn = chip8_traits::count8(instruction.nn().to_vec());
+            let nn = count8(instruction.nn().to_vec());
             match nn {
                 0x9e => return skip_if_pressed(instruction, keypad, variable_registers, program_counter),
                 0xa1 => return skip_if_not_pressed(instruction, keypad, variable_registers, program_counter),
@@ -67,7 +67,7 @@ pub fn execute<
             }
         },
         0x0f => {
-            let nn = chip8_traits::count8(instruction.nn().to_vec());
+            let nn = count8(instruction.nn().to_vec());
             match nn {
                 0x07 | 0x15 | 0x18 => return set_timer(instruction, variable_registers, delay_timer, sound_timer),
                 0x1e => return add_to_index(instruction, variable_registers, index_register),
@@ -93,11 +93,11 @@ fn skip<
     program_counter: &mut ProgramCounter
 ) -> ExecuteResult<Instruction> {
 
-    let count = chip8_traits::count8(instruction.w().to_vec());
-    let x = chip8_traits::count8(instruction.x().to_vec());
+    let count = count8(instruction.w().to_vec());
+    let x = count8(instruction.x().to_vec());
     match count {
         0x3 => {
-            let value = chip8_traits::count8(instruction.nn().to_vec());
+            let value = count8(instruction.nn().to_vec());
             match variable_registers.get(x) {
                 Some(register_value) => {
                     if value == register_value {
@@ -108,7 +108,7 @@ fn skip<
             }
         },
         0x4 => {
-            let value = chip8_traits::count8(instruction.nn().to_vec());
+            let value = count8(instruction.nn().to_vec());
             match variable_registers.get(x) {
                 Some(register_value) => {
                     if value != register_value {
@@ -119,7 +119,7 @@ fn skip<
             }
         },
         0x5 => {
-            let y = chip8_traits::count8(instruction.y().to_vec());
+            let y = count8(instruction.y().to_vec());
             match variable_registers.get(x) {
                 Some(x_value) => {
                     match variable_registers.get(y) {
@@ -135,7 +135,7 @@ fn skip<
             }
         },
         0x9 => {
-            let y = chip8_traits::count8(instruction.y().to_vec());
+            let y = count8(instruction.y().to_vec());
             match variable_registers.get(x) {
                 Some(x_value) => {
                     match variable_registers.get(y) {
@@ -167,7 +167,7 @@ fn push_stack<
     ProgramCounter: chip8_traits::ProgramCounter<Instruction>
 > (instruction: Instruction, stack: &mut Stack, program_counter: &mut ProgramCounter) {
     stack.push(program_counter.get_position());
-    let new_position = chip8_traits::count16(instruction.nnn().to_vec());
+    let new_position = count16(instruction.nnn().to_vec());
     program_counter.set_position(new_position as usize);
 }
 
@@ -192,15 +192,15 @@ fn jump<
     ProgramCounter: chip8_traits::ProgramCounter<Instruction>
 >(instruction: Instruction, program_counter: &mut ProgramCounter) 
 {
-    let count = chip8_traits::count16(instruction.nnn().to_vec());
+    let count = count16(instruction.nnn().to_vec());
     program_counter.set_position(count as usize);
 } 
 
 fn set_register<
     Instruction: chip8_traits::Instruction
 >(instruction: Instruction, variable_registers: &mut VariableRegisters) -> ExecuteResult<Instruction> {
-    let index = chip8_traits::count8(instruction.x().to_vec());
-    let value = chip8_traits::count8(instruction.nn().to_vec());
+    let index = count8(instruction.x().to_vec());
+    let value = count8(instruction.nn().to_vec());
 
     match variable_registers.set(index, value) {
         Ok(_) => Ok(()),
@@ -211,8 +211,8 @@ fn set_register<
 fn add_to_register<
     Instruction: chip8_traits::Instruction
 >(instruction: Instruction, variable_registers: &mut VariableRegisters) -> ExecuteResult<Instruction> {
-    let index = chip8_traits::count8(instruction.x().to_vec());
-    let value = chip8_traits::count8(instruction.nn().to_vec());
+    let index = count8(instruction.x().to_vec());
+    let value = count8(instruction.nn().to_vec());
 
     match variable_registers.get(index) {
         Some(index_value) => {
@@ -229,8 +229,8 @@ fn add_to_register<
 fn set_x_value_of_y<
     Instruction: chip8_traits::Instruction
 > (instruction: Instruction, variable_registers: &mut VariableRegisters) -> ExecuteResult<Instruction> {
-    let x = chip8_traits::count8(instruction.x().to_vec());
-    let y = chip8_traits::count8(instruction.y().to_vec());
+    let x = count8(instruction.x().to_vec());
+    let y = count8(instruction.y().to_vec());
 
     match variable_registers.get(y) {
         Some(y_value) => {
@@ -246,8 +246,8 @@ fn set_x_value_of_y<
 fn or_x_value_of_y<
     Instruction: chip8_traits::Instruction
 >(instruction: Instruction, variable_registers: &mut VariableRegisters) -> ExecuteResult<Instruction> {
-    let x = chip8_traits::count8(instruction.x().to_vec());
-    let y = chip8_traits::count8(instruction.y().to_vec());
+    let x = count8(instruction.x().to_vec());
+    let y = count8(instruction.y().to_vec());
 
     match variable_registers.get(y) {
         Some(y_value) => {
@@ -270,8 +270,8 @@ fn or_x_value_of_y<
 fn and_x_value_of_y<
     Instruction: chip8_traits::Instruction
 >(instruction: Instruction, variable_registers: &mut VariableRegisters) -> ExecuteResult<Instruction> {
-    let x = chip8_traits::count8(instruction.x().to_vec());
-    let y = chip8_traits::count8(instruction.y().to_vec());
+    let x = count8(instruction.x().to_vec());
+    let y = count8(instruction.y().to_vec());
 
     match variable_registers.get(y) {
         Some(y_value) => {
@@ -294,8 +294,8 @@ fn and_x_value_of_y<
 fn xor_x_value_of_y<
     Instruction: chip8_traits::Instruction
 >(instruction: Instruction, variable_registers: &mut VariableRegisters) -> ExecuteResult<Instruction> {
-    let x = chip8_traits::count8(instruction.x().to_vec());
-    let y = chip8_traits::count8(instruction.y().to_vec());
+    let x = count8(instruction.x().to_vec());
+    let y = count8(instruction.y().to_vec());
 
     guard!(let Some(x_value) = variable_registers.get(x) else {
         return Err(InstructionError::InstructionExecuteError(instruction));
@@ -316,8 +316,8 @@ fn xor_x_value_of_y<
 fn add_to_x_value_of_y<
     Instruction: chip8_traits::Instruction
 >(instruction: Instruction, variable_registers: &mut VariableRegisters) -> ExecuteResult<Instruction> {
-    let x = chip8_traits::count8(instruction.x().to_vec());
-    let y = chip8_traits::count8(instruction.y().to_vec());
+    let x = count8(instruction.x().to_vec());
+    let y = count8(instruction.y().to_vec());
 
     match variable_registers.get(y) {
         Some(y_value) => {
@@ -351,8 +351,8 @@ fn add_to_x_value_of_y<
 fn subtract_to_x_value_of_y<
     Instruction: chip8_traits::Instruction
 >(instruction: Instruction, variable_registers: &mut VariableRegisters) -> ExecuteResult<Instruction> {
-    let x = chip8_traits::count8(instruction.x().to_vec());
-    let y = chip8_traits::count8(instruction.y().to_vec());
+    let x = count8(instruction.x().to_vec());
+    let y = count8(instruction.y().to_vec());
 
     match variable_registers.get(y) {
         Some(y_value) => {
@@ -386,8 +386,8 @@ fn subtract_to_x_value_of_y<
 fn set_x_right_shifted_y<
     Instruction: chip8_traits::Instruction
 >(instruction: Instruction, variable_registers: &mut VariableRegisters) -> ExecuteResult<Instruction> {
-    let x = chip8_traits::count8(instruction.x().to_vec());
-    let y = chip8_traits::count8(instruction.y().to_vec());
+    let x = count8(instruction.x().to_vec());
+    let y = count8(instruction.y().to_vec());
 
     guard!(let Some(y_value) = variable_registers.get(y) else {
         return Err(InstructionError::InstructionExecuteError(instruction));
@@ -419,8 +419,8 @@ fn set_x_right_shifted_y<
 fn subtract_to_x_value_of_y_reversed<
     Instruction: chip8_traits::Instruction
 >(instruction: Instruction, variable_registers: &mut VariableRegisters) -> ExecuteResult<Instruction> {
-    let x = chip8_traits::count8(instruction.x().to_vec());
-    let y = chip8_traits::count8(instruction.y().to_vec());
+    let x = count8(instruction.x().to_vec());
+    let y = count8(instruction.y().to_vec());
 
     match variable_registers.get(y) {
         Some(y_value) => {
@@ -459,8 +459,8 @@ fn subtract_to_x_value_of_y_reversed<
 fn set_x_left_shifted_y<
     Instruction: chip8_traits::Instruction
 >(instruction: Instruction, variable_registers: &mut VariableRegisters) -> ExecuteResult<Instruction> {
-    let x = chip8_traits::count8(instruction.x().to_vec());
-    let y = chip8_traits::count8(instruction.y().to_vec());
+    let x = count8(instruction.x().to_vec());
+    let y = count8(instruction.y().to_vec());
 
     guard!(let Some(y_value) = variable_registers.get(y) else {
         return Err(InstructionError::InstructionExecuteError(instruction));
@@ -492,7 +492,7 @@ fn set_x_left_shifted_y<
 fn set_index_register<
     Instruction: chip8_traits::Instruction
 >(instruction: Instruction, index_register: &mut usize) {
-    let value = chip8_traits::count16(chip8_traits::Instruction::nnn(&instruction).to_vec());
+    let value = count16(chip8_traits::Instruction::nnn(&instruction).to_vec());
     (*index_register) = value as usize;
 }
 
@@ -504,7 +504,7 @@ fn jump_v0<
         return Err(InstructionError::InstructionExecuteError(instruction));
     });
 
-    let value = chip8_traits::count16(chip8_traits::Instruction::nnn(&instruction).to_vec());
+    let value = count16(chip8_traits::Instruction::nnn(&instruction).to_vec());
     (program_counter as &mut dyn chip8_traits::ProgramCounter<Instruction>).set_position(value as usize + x_value as usize);
 
     Ok(())
@@ -514,8 +514,8 @@ fn set_register_random<
     Instruction: chip8_traits::Instruction,
     Random: chip8_traits::Random
 >(instruction: Instruction, variable_registers: &mut VariableRegisters, random: &mut Random)-> ExecuteResult<Instruction> {
-    let x = chip8_traits::count8(instruction.x().to_vec());
-    let value = chip8_traits::count8(instruction.nn().to_vec());
+    let x = count8(instruction.x().to_vec());
+    let value = count8(instruction.nn().to_vec());
 
     let random_value = random.value();
     if let Err(_) = variable_registers.set(x, random_value & value) {
@@ -527,9 +527,9 @@ fn set_register_random<
 fn display<
     Instruction: chip8_traits::Instruction
 >(instruction: Instruction, index_register: &usize, variable_registers: &mut VariableRegisters, memory: &Memory, screen_memory: &mut ScreenMemory) -> ExecuteResult<Instruction> {
-    let vx = chip8_traits::count8(instruction.x().to_vec());
-    let vy = chip8_traits::count8(instruction.y().to_vec());
-    let n = chip8_traits::count8(chip8_traits::Instruction::n(&instruction).to_vec());
+    let vx = count8(instruction.x().to_vec());
+    let vy = count8(instruction.y().to_vec());
+    let n = count8(chip8_traits::Instruction::n(&instruction).to_vec());
     
     guard!(let Ok(_) = variable_registers.set(0x0f, 0) 
     else {
@@ -567,7 +567,7 @@ fn skip_if_pressed<
     variable_registers: &VariableRegisters, 
     program_counter: &mut ProgramCounter
 ) -> ExecuteResult<Instruction> {
-    let x = chip8_traits::count8(instruction.x().to_vec());
+    let x = count8(instruction.x().to_vec());
     
     guard!(let Some(x_value) = variable_registers.get(x) else {
         return Err(InstructionError::InstructionExecuteError(instruction));
@@ -590,7 +590,7 @@ fn skip_if_not_pressed<
     variable_registers: &VariableRegisters, 
     program_counter: &mut ProgramCounter
 ) -> ExecuteResult<Instruction> {
-    let x = chip8_traits::count8(instruction.x().to_vec());
+    let x = count8(instruction.x().to_vec());
     
     guard!(let Some(x_value) = variable_registers.get(x) else {
         return Err(InstructionError::InstructionExecuteError(instruction));
@@ -606,9 +606,9 @@ fn skip_if_not_pressed<
 fn set_timer<
     Instruction: chip8_traits::Instruction
 >(instruction: Instruction, variable_registers: &mut VariableRegisters, delay_timer: &mut DelayTimer, sound_timer: &mut SoundTimer) -> ExecuteResult<Instruction> {
-    let x_value = chip8_traits::count8(instruction.x().to_vec());
+    let x_value = count8(instruction.x().to_vec());
 
-    match chip8_traits::count8(instruction.nn().to_vec()) {
+    match count8(instruction.nn().to_vec()) {
         0x07 => {
             let value = (delay_timer as &mut dyn chip8_traits::Timer).get();
 
@@ -639,7 +639,7 @@ fn set_timer<
 fn add_to_index<
     Instruction: chip8_traits::Instruction
 >(instruction: Instruction, variable_registers: &VariableRegisters, index_register: &mut usize) -> ExecuteResult<Instruction> {
-    let x = chip8_traits::count8(instruction.x().to_vec());
+    let x = count8(instruction.x().to_vec());
     guard!(let Some(x_value) = variable_registers.get(x) else {
         return Err(InstructionError::InstructionExecuteError(instruction));
     });
@@ -653,7 +653,7 @@ fn wait_for_key<
     Instruction: chip8_traits::Instruction,
     ProgramCounter: chip8_traits::ProgramCounter<Instruction>
 >(instruction: Instruction, keypad: &dyn chip8_traits::Keypad, variable_registers: &mut VariableRegisters, program_counter: &mut ProgramCounter) -> ExecuteResult<Instruction> {
-    let x = chip8_traits::count8(instruction.x().to_vec());
+    let x = count8(instruction.x().to_vec());
 
     let keypad_state = keypad.state();
     
@@ -680,7 +680,7 @@ fn wait_for_key<
 fn font_character<
     Instruction: chip8_traits::Instruction
 >(instruction: Instruction, variable_registers: &VariableRegisters, index_register: &mut usize, font_start: usize) -> ExecuteResult<Instruction> {
-    let x = chip8_traits::count8(instruction.x().to_vec());
+    let x = count8(instruction.x().to_vec());
     guard!(let Some(x_value) = variable_registers.get(x) else {
         return Err(InstructionError::InstructionExecuteError(instruction));
     });
@@ -694,7 +694,7 @@ fn font_character<
 fn binary_to_decimal<
     Instruction: chip8_traits::Instruction
 >(instruction: Instruction, variable_registers: &VariableRegisters, memory: &mut Memory, index_register: &usize) -> ExecuteResult<Instruction> {
-    let x = chip8_traits::count8(instruction.x().to_vec());
+    let x = count8(instruction.x().to_vec());
     guard!(let Some(x_value) = variable_registers.get(x) else {
         return Err(InstructionError::InstructionExecuteError(instruction));
     });
@@ -709,7 +709,7 @@ fn binary_to_decimal<
 fn register_to_memory<
     Instruction: chip8_traits::Instruction
 >(instruction: Instruction, variable_registers: &VariableRegisters, memory: &mut Memory, index_register: usize) -> ExecuteResult<Instruction> {
-    let x = chip8_traits::count8(instruction.x().to_vec());
+    let x = count8(instruction.x().to_vec());
     // TODO: option to incriment I while working
 
     for offset in 0..=x {
@@ -728,7 +728,7 @@ fn register_to_memory<
 fn memory_to_register<
     Instruction: chip8_traits::Instruction
 >(instruction: Instruction, variable_registers: &mut VariableRegisters, memory: &Memory, index_register: usize) -> ExecuteResult<Instruction> {
-    let x = chip8_traits::count8(instruction.x().to_vec());
+    let x = count8(instruction.x().to_vec());
     // TODO: option to incriment I while working
 
     for offset in 0..=x {

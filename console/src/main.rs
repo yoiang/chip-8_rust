@@ -1,6 +1,5 @@
 use std::{env, time::Duration};
 
-use chip8_base::Font;
 use chip8_traits::Interpreter;
 
 const DEFAULT_PROGRAM_START: usize = 0x200;

@@ -1,4 +1,3 @@
-use chip8_base::Font;
 use chip8_traits::Interpreter;
 use wasm_bindgen::prelude::*;
 use std::{borrow::Borrow, cell::{RefCell}, fmt, rc::Rc};
