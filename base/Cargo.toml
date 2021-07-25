@@ -1,6 +1,6 @@
 [package]
 name = "chip8_base"
-edition = "2015"
+edition = "2018"
 version = "0.1.0"
 authors = ["Ian G <yo.ian.g@gmail.com>"]
 
