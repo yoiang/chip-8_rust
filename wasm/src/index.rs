@@ -1,24 +1,24 @@
 use chip8_traits::Interpreter;
 use wasm_bindgen::prelude::*;
-use std::{borrow::Borrow, cell::{RefCell}, fmt, rc::Rc};
+use std::{borrow::{Borrow}, cell::{RefCell}, fmt, rc::Rc};
 
-use crate::{renderer::fmt_rendered_memory, utils};
+use crate::{renderer::fmt_rendered_memory, utility::{js_value_as_usize, set_panic_hook}};
 
-// A macro to provide `println!(..)`-style syntax for `console.log` logging.
-macro_rules! console_log {
-    ( $( $t:tt )* ) => {
-        web_sys::console::log_1(&format!( $( $t )* ).into());
-    }
-}
+// // A macro to provide `println!(..)`-style syntax for `console.log` logging.
+// macro_rules! console_log {
+//     ( $( $t:tt )* ) => {
+//         web_sys::console::log_1(&format!( $( $t )* ).into());
+//     }
+// }
 
-macro_rules! console_log_unsafe {
-    ( $( $t:tt )* ) => {
-        #[allow(unused_unsafe)] // Currently unsafe not properly recognized by analyzer
-        unsafe {
-            console_log!($( $t )*);
-        }
-    }
-}
+// macro_rules! console_log_unsafe {
+//     ( $( $t:tt )* ) => {
+//         #[allow(unused_unsafe)] // Currently unsafe not properly recognized by analyzer
+//         unsafe {
+//             console_log!($( $t )*);
+//         }
+//     }
+// }
 
 #[wasm_bindgen]
 pub struct Index {
@@ -34,7 +34,7 @@ const DEFAULT_PROGRAM_START: usize = 0x200;
 #[wasm_bindgen]
 impl Index {
     pub fn new() -> Index {
-        utils::set_panic_hook();
+        set_panic_hook();
         
         let rendered_memory = Rc::new(RefCell::new(vec![]));
         let renderer = crate::renderer::Renderer::new(Rc::clone(&rendered_memory));
@@ -55,13 +55,13 @@ impl Index {
     pub fn load(&mut self, program: Vec<u8>) {
         let program_length = program.len();
         chip8_traits::Interpreter::load(&mut self.interpreter, program, DEFAULT_PROGRAM_START);
-        console_log_unsafe!("Loaded program {} bytes", program_length);
+        crate::console_log_unsafe!("Loaded program {} bytes", program_length);
         chip8_traits::Interpreter::clear_screen(&mut self.interpreter);
     }
 
     pub fn update(&mut self) {
         if let Err(error) = chip8_traits::Interpreter::update(&mut self.interpreter) {
-            console_log_unsafe!("Error: while updating: {}", error);
+            crate::console_log_unsafe!("Error: while updating: {}", error);
         }
     }
 
@@ -69,17 +69,24 @@ impl Index {
         self.to_string()
     }
 
-    pub fn update_keypad(&mut self, update: Vec<u8>) {
-        let mut update_normalized = [false; 16];
+    fn set_key_state(&mut self, js_index: JsValue, state: bool) -> bool {
+        match js_value_as_usize(js_index) {
+            Some(index) => {
+                let mut keypad_state = *(*self.keypad_state).borrow_mut();
+                keypad_state[index as usize] = state;
 
-        for (index, value) in update.iter().enumerate() {
-            if index >= update_normalized.len() {
-                break;
-            }
-            update_normalized[index] = *value > 0;
+                true
+            },
+            None => false
         }
+    }
 
-        (*self.keypad_state.borrow_mut()) = update_normalized;
+    pub fn keydown(&mut self, js_index: JsValue) -> bool {
+        self.set_key_state(js_index, true)
+    }
+
+    pub fn keyup(&mut self, js_index: JsValue) -> bool {
+        self.set_key_state(js_index, false)
     }
 
     pub fn dump_memory(&self) -> String {

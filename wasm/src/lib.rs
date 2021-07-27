@@ -1,9 +1,9 @@
-mod utils;
 mod renderer;
 mod interpreter;
 mod random;
 mod keypad;
 mod index;
+mod utility;
 
 // use wasm_bindgen::prelude::*;
 

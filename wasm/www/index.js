@@ -15,28 +15,16 @@ const renderLoop = () => {
     requestAnimationFrame(renderLoop);
 };
 
-const keypadState = [
-    false, false, false, false,
-    false, false, false, false,
-    false, false, false, false,
-    false, false, false, false,
-];
-
-const setKeyState = (key, value) => {
-    const offset = mapKeyEventCodeToKeypadIndex(key);
-    keypadState[offset] = value;
-}
-
 const handleKeydownEvent = (event) => {
     const key = event.key;
-    setKeyState(key, true);
-    index.update_keypad(keypadState);
+    const key_index = mapKeyEventCodeToKeypadIndex(key);
+    const result = index.keydown(key_index);
 }
 
 const handleKeyupEvent = (event) => {
     const key = event.key;
-    setKeyState(key, false);
-    index.update_keypad(keypadState);
+    const key_index = mapKeyEventCodeToKeypadIndex(key);
+    const result = index.keyup(key_index);
 }
 
 const setIndex = (newIndex) => {
@@ -163,18 +151,3 @@ if (newValue && typeof newValue.then == 'function') {
 } else {
     setIndex(newValue);
 }
-
-
-/*
-        <option value="B3/S23">Life (B3/S23)</option>
-        <option value="B2/S">Seeds (B2/S)</option>
-        <option value="B1357/S1357">Replicator (B1357/S1357)</option>
-        <option value="B0/S0">Radioactive Bacteria (B0/S0)</option>
-        <option value="B0/S15">Ancient Techno (B0/S15)</option>
-        <option value="B3/S012345678">Life Without Death (B3/S012345678)</option>
-        <option value="B3/S1234">Mazectric (B3/S1234)</option>
-        <option value="B36/S23">HighLife (B36/S23)</option>
-        <option value="B3678/S34678">Day & Night (B3678/S34678)</option>
-        <option value="B38/S23">Pedestrian Life (B38/S23)</option>
-        <option value="custom">Custom</option>
-        */
