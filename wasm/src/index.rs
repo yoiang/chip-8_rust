@@ -89,6 +89,11 @@ impl Index {
         self.set_key_state(js_index, false)
     }
 
+    pub fn key_state(&self) -> Box<[JsValue]> {
+        let keypad_state = *(*self.keypad_state).borrow();
+        keypad_state.iter().map(|value| JsValue::from_bool(*value)).collect()
+    }
+
     pub fn dump_memory(&self) -> String {
         match String::from_utf8(self.interpreter.dump_memory()) {
             Ok(result) => result.to_string(),
