@@ -4,33 +4,332 @@
     <meta charset="utf-8">
     <title>CHIP-8</title>
     <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@200;300;500;600;700&display=swap');
       html {
         width: 100%;
         height: 100%;
         padding: 0;
         margin: 0;
+
+        font-family: 'Inconsolata', monospace;
       }
       body {
-        color: green;
-        background-color: black;
+        color: #A5E6BA;
         width: 100%;
         height: 100%;
         padding: 0;
         margin: 0;
       }
+
+      a {
+        color: inherit;
+        font-weight: 700;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        body {
+          color: #A5E6BA;
+          background-color: #3D2C2E;
+        }
+      }
+      @media (prefers-color-scheme: light) {
+        body {
+          color: #5F7367;
+          background-color: rgb(241, 237, 237);
+        }
+      }
+
+      #page_content {
+        display: flex;
+        flex-direction: column;
+
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      #canvas_container {
+        margin-top: 1%;
+        margin-left: 5%;
+        margin-right: 5%;
+        width: 90%;
+        padding-top: 50%; 
+        position: relative; 
+      }
+
+      #chip8_render-canvas {
+        /* width: 100%;
+        height: 100%; */
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+
+        border: 2px solid rgb(78, 78, 78);
+        border-radius: 50px;
+        background-color: rgb(24, 24, 24);
+        box-shadow: 5 5 5 5;
+
+        text-align: center;
+
+        overflow: hidden;
+      }
+
+      #app-controls-container {
+        flex-grow: 1;
+        /* border: 1px solid white; */
+
+        margin-bottom: 2%;
+        overflow-y: hidden;
+      }
+    </style>
+    <style>
+      .hex_value {
+        font-weight: 300;
+        color: #E87461;
+      }
+
+      .decimal_value {
+        font-weight: 300;
+        color: #A4BEF3;
+      }
+
       .controls-container {
-        color: green;
-        padding: 5px;
+        display: flex;
+        flex-direction: row;
+      }
+
+      .log_container {
+        border: 1px solid #5F7367;
+        padding: 0px;
+        padding-left: 1%;
+        padding-right: 1%;
+        overflow: hidden;
+      }
+
+      .instruction {
+        font-style: italic;
+        color: #5F7367;
+      }
+
+      /* .memory_location {
+        font-weight: 600;
+      } 
+      */
+
+      .variable_register {
+        margin-bottom: 1%;
+      }
+
+      .variable_register > .name {
+        font-weight: 700;
+        color: #5F7367;
+      }
+
+      .current_disassembler_line {
+        background-color: green;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .hex_value {
+          color: #E87461;
+        }
+
+        .decimal_value {
+          color: #A4BEF3;
+        }
+
+        .log_container {
+          border-color: #5F7367;
+        }
+
+        .instruction {
+          color: #5F7367;
+        }
+
+        .variable_register > .name {
+          color: #5F7367;
+        }
+      }
+      @media (prefers-color-scheme: light) {
+        .hex_value {
+          color: #E87461;
+        }
+
+        .decimal_value {
+          color: #A4BEF3;
+        }
+
+        .log_container {
+          border-color: #A5E6BA;
+        }
+
+        .instruction {
+          color: #A5E6BA;
+        }
+
+        .variable_register > .name {
+          color: #A5E6BA;
+        }
+      }
+    </style>
+    <style>
+      #memory_interpreter {
+        margin: 1%;
+        margin-top: 0;
+        margin-bottom: 0;
+
+        flex-basis: 33%;
+      }
+
+      #memory_interpreter > ul {
+        padding: 0;
+        list-style-type: none;
+      }
+
+      #memory_interpreter > ul > #current {
+        background-color: green;
+        color: black;
+      }
+
+      #middle {
+        margin: 1%;
+        margin-top: 0;
+        margin-bottom: 0;
+
+        flex-basis: 33%;
+
+        overflow-y: hidden;
+
+        display: flex;
+        flex-direction: column;
+      }
+
+      #variable_registers {
+        display: flex;
+        flex-direction: column;
+      }
+
+      #program {
+        margin-top: 5%;
+      }
+
+      #information {
+        margin-top: 5%;
+        overflow-y: scroll;
+
+        display: none;
+      }
+
+      #right {
+        margin: 1%;
+        margin-top: 0;
+        margin-bottom: 0;
+
+        flex-basis: 33%;
+
+        overflow-y: hidden;
+
+        display: flex;
+        flex-direction: column;
+      }
+
+      #miscellanious {
+        display: flex;
+        flex-direction: column;
+      }
+
+      #player {
+        margin-top: 5%;
+      }
+
+      #execution_log {
+        margin-top: 5%;
+        flex-grow: 1;
+        overflow: scroll;
+
+        display: none;
+      }
+      
+      #execution_log > ul {
+        list-style-type: decimal-leading-zero;
+      }
+
+      #footer {
+        width: 100%;
+        text-align: center;
       }
     </style>
   </head>
   <body>
     <noscript>This page contains webassembly and javascript content, please enable javascript in your browser.</noscript>
-    <pre id="chip8_render-canvas"></pre>
 
-    <div id="app-controls-container" class="controls-container">
-      <select id="app-programs" name="Programs">
-      </select>
+    <div id="page_content">
+      <div id="canvas_container">
+        <pre id="chip8_render-canvas"></pre>
+      </div>
+
+      <div id="app-controls-container" class="controls-container">
+        <div class="log_container" id="memory_interpreter">
+          <partial-disassembler id="partial_disassembler"></partial-disassembler>
+        </div>
+        <div id="middle">
+          <variable-registers id="variable_registers"></variable-registers>
+          <div id="program">
+            <select id="app-programs" name="Programs">
+            </select>
+            <div id="information">
+              <div id="title">Title: 15 Puzzle</div>
+              <div id="author">Author: Person</div>
+              <div id="description">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent ac magna semper, tincidunt enim a, sagittis est. Cras at nunc pulvinar ante accumsan vulputate sit amet non mauris. Cras nec purus vel dolor imperdiet porttitor. Mauris elit velit, auctor eu maximus eu, commodo id diam. Nullam et rhoncus tortor. Integer egestas ex at orci tempus varius. Suspendisse ullamcorper, magna quis tristique pharetra, mi tellus bibendum mauris, ut commodo urna justo quis arcu. Nam ultrices erat velit, quis ultricies tortor rhoncus sed. Praesent efficitur, dui pulvinar pharetra tempor, ex eros vulputate lectus, ac porta ipsum elit at tortor. Donec viverra luctus turpis id suscipit.
+    
+                Pellentesque varius dui at semper ultrices. Proin vestibulum et ex sit amet placerat. Maecenas ut interdum nibh. Morbi pretium lorem quis nulla auctor gravida vitae porttitor orci. Duis facilisis mollis dignissim. Donec lobortis ut nibh sit amet consequat. In dictum nec mauris consectetur mattis. Maecenas libero dui, varius vitae ligula at, pharetra pellentesque massa. Etiam aliquam erat at nulla volutpat, eu sagittis lectus fermentum. Cras fermentum ullamcorper egestas. Sed velit sapien, viverra eget sagittis eget, placerat eget tortor. Aliquam est nunc, congue a suscipit vel, hendrerit a orci.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="right">
+          <div id="miscellanious">
+            <program-counter id="program_counter"></program-counter>
+            <index-register id="index_register"></index-register>
+            <delay-timer id="delay_timer"></delay-timer>
+            <sound-timer id="sound_timer"></sound-timer>
+            <div id="player"><button id="play_pause">Pause</button> <button id="step">Step</button></div>
+          </div>
+          <div class="log_container" id="execution_log">
+            <ul>
+              <li>Jumped to <span class="hex_value">0x1234</span></li>
+              <li>Jumped to <span class="hex_value">0x1234</span></li>
+              <li>Jumped to <span class="hex_value">0x1234</span></li>
+              <li>Jumped to <span class="hex_value">0x1234</span></li>
+              <li>Jumped to <span class="hex_value">0x1234</span></li>
+              <li>Jumped to <span class="hex_value">0x1234</span></li>
+              <li>Jumped to <span class="hex_value">0x1234</span></li>
+              <li>Jumped to <span class="hex_value">0x1234</span></li>
+              <li>Jumped to <span class="hex_value">0x1234</span></li>
+              <li>Jumped to <span class="hex_value">0x1234</span></li>
+              <li>Jumped to <span class="hex_value">0x1234</span></li>
+              <li>Jumped to <span class="hex_value">0x1234</span></li>
+              <li>Jumped to <span class="hex_value">0x1234</span></li>
+              <li>Jumped to <span class="hex_value">0x1234</span></li>
+              <li>Jumped to <span class="hex_value">0x1234</span></li>
+              <li>Jumped to <span class="hex_value">0x1234</span></li>
+              <li>Jumped to <span class="hex_value">0x1234</span></li>
+              <li>Jumped to <span class="hex_value">0x1234</span></li>
+              <li>Jumped to <span class="hex_value">0x1234</span></li>
+              <li>Jumped to <span class="hex_value">0x1234</span></li>
+              <li>Jumped to <span class="hex_value">0x1234</span></li>
+              <li>Jumped to <span class="hex_value">0x1234</span></li>
+              <li>Jumped to <span class="hex_value">0x1234</span></li>
+              <li>Jumped to <span class="hex_value">0x1234</span></li>
+              <li>Jumped to <span class="hex_value">0x1234</span></li>
+              <li>Jumped to <span class="hex_value">0x1234</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div id="footer">CHIP-8 Interpreter - made with ❤️ by Ian - <a href="https://github.com/yoiang/chip-8_rust">Github</a></div>
     </div>
 
     <script src="./bootstrap.js"></script>

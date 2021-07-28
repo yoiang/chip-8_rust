@@ -55,6 +55,9 @@
 /******/ 		"../pkg/chip8_wasm_bg.wasm": function() {
 /******/ 			return {
 /******/ 				"./chip8_wasm_bg.js": {
+/******/ 					"__wbindgen_json_parse": function(p0i32,p1i32) {
+/******/ 						return installedModules["../pkg/chip8_wasm_bg.js"].exports["__wbindgen_json_parse"](p0i32,p1i32);
+/******/ 					},
 /******/ 					"__wbindgen_object_drop_ref": function(p0i32) {
 /******/ 						return installedModules["../pkg/chip8_wasm_bg.js"].exports["__wbindgen_object_drop_ref"](p0i32);
 /******/ 					},
@@ -73,6 +76,15 @@
 /******/ 					"__wbg_log_9a99fb1af846153b": function(p0i32) {
 /******/ 						return installedModules["../pkg/chip8_wasm_bg.js"].exports["__wbg_log_9a99fb1af846153b"](p0i32);
 /******/ 					},
+/******/ 					"__wbg_buffer_9e184d6f785de5ed": function(p0i32) {
+/******/ 						return installedModules["../pkg/chip8_wasm_bg.js"].exports["__wbg_buffer_9e184d6f785de5ed"](p0i32);
+/******/ 					},
+/******/ 					"__wbg_newwithbyteoffsetandlength_e57ad1f2ce812c03": function(p0i32,p1i32,p2i32) {
+/******/ 						return installedModules["../pkg/chip8_wasm_bg.js"].exports["__wbg_newwithbyteoffsetandlength_e57ad1f2ce812c03"](p0i32,p1i32,p2i32);
+/******/ 					},
+/******/ 					"__wbg_new_e8101319e4cf95fc": function(p0i32) {
+/******/ 						return installedModules["../pkg/chip8_wasm_bg.js"].exports["__wbg_new_e8101319e4cf95fc"](p0i32);
+/******/ 					},
 /******/ 					"__wbg_random_29218b0f217b2697": function() {
 /******/ 						return installedModules["../pkg/chip8_wasm_bg.js"].exports["__wbg_random_29218b0f217b2697"]();
 /******/ 					},
@@ -81,6 +93,9 @@
 /******/ 					},
 /******/ 					"__wbindgen_throw": function(p0i32,p1i32) {
 /******/ 						return installedModules["../pkg/chip8_wasm_bg.js"].exports["__wbindgen_throw"](p0i32,p1i32);
+/******/ 					},
+/******/ 					"__wbindgen_memory": function() {
+/******/ 						return installedModules["../pkg/chip8_wasm_bg.js"].exports["__wbindgen_memory"]();
 /******/ 					}
 /******/ 				}
 /******/ 			};
@@ -183,7 +198,7 @@
 /******/ 				promises.push(installedWasmModuleData);
 /******/ 			else {
 /******/ 				var importObject = wasmImportObjects[wasmModuleId]();
-/******/ 				var req = fetch(__webpack_require__.p + "" + {"../pkg/chip8_wasm_bg.wasm":"eb92f8d964a50a0a01fd"}[wasmModuleId] + ".module.wasm");
+/******/ 				var req = fetch(__webpack_require__.p + "" + {"../pkg/chip8_wasm_bg.wasm":"d81b68469d55f2057afb"}[wasmModuleId] + ".module.wasm");
 /******/ 				var promise;
 /******/ 				if(importObject instanceof Promise && typeof WebAssembly.compileStreaming === 'function') {
 /******/ 					promise = Promise.all([WebAssembly.compileStreaming(req), importObject]).then(function(items) {
@@ -284,7 +299,7 @@
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-eval("// A dependency graph that contains any wasm must all be imported\n// asynchronously. This `bootstrap.js` file does the single async import, so\n// that no one else needs to worry about it again.\n__webpack_require__.e(/*! import() */ 0).then(__webpack_require__.bind(null, /*! ./index.js */ \"./index.js\"))\n  .catch(e => console.error(\"Error importing `index.js`:\", e));\n\n\n//# sourceURL=webpack:///./bootstrap.js?");
+eval("// A dependency graph that contains any wasm must all be imported\n// asynchronously. This `bootstrap.js` file does the single async import, so\n// that no one else needs to worry about it again.\n__webpack_require__.e(/*! import() */ 0).then(__webpack_require__.bind(null, /*! ./index.js */ \"./index.js\"))\n  .catch(e => console.error(\"Error importing `index.js`:\", e));\n\n__webpack_require__.e(/*! import() */ 3).then(__webpack_require__.bind(null, /*! ./components/IndexRegister */ \"./components/IndexRegister.js\"))\n__webpack_require__.e(/*! import() */ 4).then(__webpack_require__.bind(null, /*! ./components/ProgramCounter */ \"./components/ProgramCounter.js\"))\n__webpack_require__.e(/*! import() */ 1).then(__webpack_require__.bind(null, /*! ./components/DelayTimer */ \"./components/DelayTimer.js\"))\n__webpack_require__.e(/*! import() */ 5).then(__webpack_require__.bind(null, /*! ./components/SoundTimer */ \"./components/SoundTimer.js\"))\n__webpack_require__.e(/*! import() */ 6).then(__webpack_require__.bind(null, /*! ./components/VariableRegister */ \"./components/VariableRegister.js\"))\n__webpack_require__.e(/*! import() */ 8).then(__webpack_require__.t.bind(null, /*! ./components/VariableRegisters */ \"./components/VariableRegisters.js\", 7))\n__webpack_require__.e(/*! import() */ 2).then(__webpack_require__.bind(null, /*! ./components/DisassemblerLine */ \"./components/DisassemblerLine.js\"))\n__webpack_require__.e(/*! import() */ 7).then(__webpack_require__.t.bind(null, /*! ./components/PartialDisassembler */ \"./components/PartialDisassembler.js\", 7))\n\n\n\n//# sourceURL=webpack:///./bootstrap.js?");
 
 /***/ })
 
