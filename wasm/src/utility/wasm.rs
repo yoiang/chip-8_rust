@@ -17,7 +17,7 @@ macro_rules! console_log {
 #[macro_export]
 macro_rules! console_log_unsafe {
     ( $( $t:tt )* ) => {
-        #[allow(unused_unsafe)] // Currently unsafe not properly recognized by analyzer
+        // #[allow(unused_unsafe)] // Currently unsafe not properly recognized by analyzer
         unsafe {
             crate::console_log!($( $t )*);
         }

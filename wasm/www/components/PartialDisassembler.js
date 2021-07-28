@@ -38,7 +38,7 @@ class PartialDisassembler extends HTMLElement {
                 // TODO: report
                 return;
             }
-            element.update(new_program_counter_location === value.location, value.location, value.value)
+            element.update(new_program_counter_location === value.location, value.location, value.value, value.disassembly)
         })
     }
   

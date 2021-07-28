@@ -3,7 +3,7 @@ use wasm_bindgen::prelude::*;
 use std::{borrow::{Borrow}, cell::{RefCell}, fmt, rc::Rc};
 use serde::{Serialize, Deserialize};
 
-use crate::{renderer::fmt_rendered_memory, utility::{js_value_as_usize, set_panic_hook}};
+use crate::{console_log_unsafe, renderer::fmt_rendered_memory, utility::{js_value_as_usize, set_panic_hook}};
 
 #[wasm_bindgen]
 pub struct Index {
@@ -45,8 +45,11 @@ impl Index {
     }
 
     pub fn update(&mut self) {
-        if let Err(error) = chip8_traits::Interpreter::update(&mut self.interpreter) {
-            crate::console_log_unsafe!("Error: while updating: {}", error);
+        match chip8_traits::Interpreter::update(&mut self.interpreter) {
+            Ok(result) => {
+                // console_log_unsafe!("Result: {}", result.instruction_disassembly.to_string());
+            },
+            Err(error) => crate::console_log_unsafe!("Error: while updating: {}", error)
         }
     }
 
@@ -122,7 +125,8 @@ impl InterpreterSnapshot {
 #[derive(Serialize, Deserialize)]
 pub struct PartialDisassembleSnapshot {
     pub location: usize,
-    pub value: (u8, u8)
+    pub value: (u8, u8),
+    pub disassembly: String
 }
 
 // #[wasm_bindgen]
@@ -135,7 +139,7 @@ pub struct PartialDisassembleSnapshot {
 
 #[wasm_bindgen]
 impl Index {
-    pub fn create_interpreter_snapshot(&self, count_before: usize, count_after: usize) -> InterpreterSnapshot {
+    pub fn create_interpreter_snapshot(&mut self, count_before: usize, count_after: usize) -> InterpreterSnapshot {
         let chip8_base::interpreter::InterpreterSnapshot { 
             program_counter_position, 
             index_register_value, 
@@ -158,7 +162,8 @@ impl Index {
             sound_timer_value,
             partial_disassemble: partial_disassemble.iter().map(|value| { PartialDisassembleSnapshot {
                 location: value.location,
-                value: value.value
+                value: value.value,
+                disassembly: value.disassembly.clone(),
             } }).collect()
         }
     }

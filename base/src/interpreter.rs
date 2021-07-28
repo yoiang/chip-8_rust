@@ -2,7 +2,7 @@ use std::{fs, usize};
 
 use chip8_traits::{ProgramCounter, Timer};
 
-use crate::{DelayTimer, SoundTimer, cpu::execute};
+use crate::{DelayTimer, Instruction, SoundTimer, cpu::execute};
 
 
 pub struct Interpreter<Renderer, Keypad, Random> 
@@ -102,7 +102,7 @@ where Renderer: chip8_traits::Renderer,
     }
 }
 
-impl<Renderer, Keypad, Random> chip8_traits::Interpreter for Interpreter<Renderer, Keypad, Random> 
+impl<Renderer, Keypad, Random> chip8_traits::Interpreter<crate::cpu::ExecutionState> for Interpreter<Renderer, Keypad, Random> 
 where Renderer: chip8_traits::Renderer, 
     Keypad: chip8_traits::Keypad,
     Random: chip8_traits::Random {
@@ -128,10 +128,13 @@ where Renderer: chip8_traits::Renderer,
         }
     }
 
-    fn update(&mut self) -> Result<(), String> {
+    fn update(&mut self) -> Result<crate::cpu::ExecutionState, String> {
         let instruction = self.fetch();
         
+        let execution_state: crate::cpu::ExecutionState;
+
         let result = execute(
+            true,
             *instruction.as_ref(), 
             &mut self.program_counter, 
             self.stack.as_mut(), 
@@ -145,9 +148,11 @@ where Renderer: chip8_traits::Renderer,
             self.random.as_mut(),
             self.font_start
         );
-        if let Err(error) = result {
-            // TODO: handle for real
-            println!("While executing instruction: {}", error);
+        match result {
+            Ok(value) => { execution_state = value; },
+            Err(error) => {
+                return Err(format!("While executing instruction: {}", error))
+            }
         }
 
         // TODO: something seems broken that I can't do "use" and have to fully qualify or when that fails, cast
@@ -167,7 +172,7 @@ where Renderer: chip8_traits::Renderer,
             return Err(format!("{}", error));
         }
 
-        Ok(())
+        Ok(execution_state)
     }
 
     fn clear_screen(&mut self) {
@@ -200,7 +205,8 @@ pub struct PartialDisassembleOptions {
 
 pub struct PartialDisassembleSnapshot {
     pub location: usize,
-    pub value: (u8, u8)
+    pub value: (u8, u8),
+    pub disassembly: String
 }
 
 impl<Renderer, Keypad, Random> Interpreter<Renderer, Keypad, Random> 
@@ -211,7 +217,8 @@ where Renderer: chip8_traits::Renderer,
         chip8_traits::ProgramCounter::<crate::Instruction>::get_position(&self.program_counter)
     }
 
-    pub fn create_partial_disassemble_snapshot(&self, disassemble_options: PartialDisassembleOptions) -> Vec<PartialDisassembleSnapshot> {
+    // TODO: figure out a way to separate from mutating execute
+    pub fn create_partial_disassemble_snapshot(&mut self, disassemble_options: PartialDisassembleOptions) -> Vec<PartialDisassembleSnapshot> {
         // TODO: fix_misalignment
         // TODO: maintain_length
         let start_location = self.program_counter.get_position() - disassemble_options.count_before * 2;
@@ -228,9 +235,33 @@ where Renderer: chip8_traits::Renderer,
                 first_value = memory_snapshot[index].value;
                 first_location = memory_snapshot[index].location;
             } else {
+                let second_value = memory_snapshot[index].value;
+                let instruction = Instruction::new(first_value, second_value);
+                let disassembly: String;
+                
+                match execute(
+                    false,
+                    instruction, 
+                    &mut self.program_counter, 
+                    self.stack.as_mut(), 
+                    self.memory.as_mut(),
+                    self.screen_memory.as_mut(),
+                    &mut self.variable_registers,
+                    self.keypad.as_mut(),
+                    &mut self.index_register,
+                    self.delay_timer.as_mut(),
+                    self.sound_timer.as_mut(),
+                    self.random.as_mut(),
+                    self.font_start
+                ) {
+                    Ok(result) => { disassembly = result.instruction_disassembly; },
+                    Err(_) => { disassembly = "".to_string(); }
+                }
+
                 result.push(PartialDisassembleSnapshot {
                     location: first_location,
-                    value: (first_value, memory_snapshot[index].value)
+                    value: (first_value, second_value),
+                    disassembly 
                 });
             }
 
@@ -240,7 +271,7 @@ where Renderer: chip8_traits::Renderer,
         result
     }
 
-    pub fn create_snapshot(&self, disassemble_options: PartialDisassembleOptions) -> InterpreterSnapshot {
+    pub fn create_snapshot(&mut self, disassemble_options: PartialDisassembleOptions) -> InterpreterSnapshot {
         InterpreterSnapshot {
             program_counter_position: self.program_counter.get_position(),
             

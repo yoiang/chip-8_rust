@@ -1,11 +1,11 @@
 use std::{thread::sleep, time::Duration};
 
-pub trait Interpreter {
+pub trait Interpreter<T> {
     fn load(&mut self, program: Vec<u8>, start_position: usize);
     // TODO: deprecate load_file in favor of load
     fn load_file(&mut self, file_name: &str, start_position: usize) -> Result<(), std::io::Error>;
 
-    fn update(&mut self) -> Result<(), String>;
+    fn update(&mut self) -> Result<T, String>;
 
     fn clear_screen(&mut self);
 
