@@ -51,8 +51,9 @@ const renderLoop = () => {
     }
 };
 
-const togglePause = () => {
+const togglePause = (event) => {
     isPaused = !isPaused;
+    event.target.innerHTML = isPaused ? "Play" : "Pause";
     if (!isPaused && indexReady) {
         requestAnimationFrame(renderLoop);
     }
