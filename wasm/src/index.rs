@@ -110,18 +110,36 @@ impl Index {
 #[wasm_bindgen]
 pub struct InterpreterSnapshot {
     pub program_counter_position: usize,
+    
     pub index_register_value: usize,
+    variable_register_values: [u8; 16],
+    
     pub delay_timer_value: u8,
     pub sound_timer_value: u8
 }
 
 #[wasm_bindgen]
+impl InterpreterSnapshot {
+    #[wasm_bindgen(getter)]
+    pub fn variable_register_values(&self) -> js_sys::Uint8Array {
+        return js_sys::Uint8Array::from(&self.variable_register_values[..]);
+    }
+}
+
+#[wasm_bindgen]
 impl Index {
     pub fn create_interpreter_snapshot(&self) -> InterpreterSnapshot {
-        let chip8_base::interpreter::InterpreterSnapshot { program_counter_position, index_register_value: index_register, delay_timer_value, sound_timer_value} = self.interpreter.create_snapshot();
+        let chip8_base::interpreter::InterpreterSnapshot { 
+            program_counter_position, 
+            index_register_value, 
+            variable_register_values,
+            delay_timer_value, 
+            sound_timer_value} = self.interpreter.create_snapshot();
+
         InterpreterSnapshot {
             program_counter_position,
-            index_register_value: index_register, 
+            index_register_value, 
+            variable_register_values,
             delay_timer_value, 
             sound_timer_value
         }

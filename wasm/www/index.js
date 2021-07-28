@@ -26,6 +26,7 @@ const updateSnapshot = () => {
 
     updateElementById("program_counter", snapshot.program_counter_position);
     updateElementById("index_register", snapshot.index_register_value);
+    updateElementById("variable_registers", snapshot.variable_register_values);
     updateElementById("delay_timer", snapshot.delay_timer_value);
     updateElementById("sound_timer", snapshot.sound_timer_value);
 }

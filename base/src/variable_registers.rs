@@ -19,6 +19,10 @@ impl VariableRegisters {
         self.value.get(index as usize).cloned()
     }
 
+    pub fn get_all(&self) -> [u8; 16] {
+        self.value.clone()
+    }
+
     pub fn set(&mut self, index: u8, value: u8) -> Result<(), OutOfBoundsError> {
         if index as usize >=  self.value.len() {
             Err(OutOfBoundsError::new(index))

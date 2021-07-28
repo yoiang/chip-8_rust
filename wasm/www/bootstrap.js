@@ -8,3 +8,6 @@ import("./components/IndexRegister")
 import("./components/ProgramCounter")
 import("./components/DelayTimer")
 import("./components/SoundTimer")
+import("./components/VariableRegister")
+import("./components/VariableRegisters")
+

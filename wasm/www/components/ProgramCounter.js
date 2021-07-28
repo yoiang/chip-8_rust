@@ -5,15 +5,9 @@ class ProgramCounter extends HTMLElement {
       super();
 
       this.position = 0;
-  
-    //   this.heading = "";
-    //   this.subheading = "";
     }
   
     connectedCallback() {
-    //   this.heading = this.getAttribute("heading");
-    //   this.subheading = this.getAttribute("subheading");
-  
       this.render();
     }
 
@@ -35,7 +29,7 @@ class ProgramCounter extends HTMLElement {
     render() {
       this.innerHTML = `
         <div class="contents">
-          ${renderNumberValue("PROGRAM", this.position, 4)}1
+          ${renderNumberValue("PROGRAM", this.position, 4)}
         </div>
         `;
     }

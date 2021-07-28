@@ -181,9 +181,12 @@ where Renderer: chip8_traits::Renderer,
 
 pub struct InterpreterSnapshot {
     pub program_counter_position: usize,
+
     pub index_register_value: usize,
+    pub variable_register_values: [u8; 16],
+
     pub delay_timer_value: u8,
-    pub sound_timer_value: u8
+    pub sound_timer_value: u8,
 }
 
 impl<Renderer, Keypad, Random> Interpreter<Renderer, Keypad, Random> 
@@ -197,7 +200,10 @@ where Renderer: chip8_traits::Renderer,
     pub fn create_snapshot(&self) -> InterpreterSnapshot {
         InterpreterSnapshot {
             program_counter_position: self.program_counter.get_position(),
+            
             index_register_value: self.index_register,
+            variable_register_values: self.variable_registers.get_all(),
+
             delay_timer_value: self.delay_timer.get(),
             sound_timer_value: self.sound_timer.get()
         }
