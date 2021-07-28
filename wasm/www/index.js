@@ -41,8 +41,8 @@ const updateSnapshot = () => {
 }
 
 const renderLoop = () => {
-    pre.textContent = index.render_text();
     index.update();
+    pre.textContent = index.render_text();
 
     updateSnapshot();
   
