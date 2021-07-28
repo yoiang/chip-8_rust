@@ -106,6 +106,28 @@ impl Index {
     }
 }
 
+#[allow(dead_code)]
+#[wasm_bindgen]
+pub struct InterpreterSnapshot {
+    pub program_counter_position: usize,
+    pub index_register_value: usize,
+    pub delay_timer_value: u8,
+    pub sound_timer_value: u8
+}
+
+#[wasm_bindgen]
+impl Index {
+    pub fn create_interpreter_snapshot(&self) -> InterpreterSnapshot {
+        let chip8_base::interpreter::InterpreterSnapshot { program_counter_position, index_register_value: index_register, delay_timer_value, sound_timer_value} = self.interpreter.create_snapshot();
+        InterpreterSnapshot {
+            program_counter_position,
+            index_register_value: index_register, 
+            delay_timer_value, 
+            sound_timer_value
+        }
+    }
+}
+
 
 impl fmt::Display for Index {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

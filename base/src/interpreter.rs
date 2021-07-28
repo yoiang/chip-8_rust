@@ -1,6 +1,9 @@
 use std::{fs, usize};
 
+use chip8_traits::{ProgramCounter, Timer};
+
 use crate::{DelayTimer, SoundTimer, cpu::execute};
+
 
 pub struct Interpreter<Renderer, Keypad, Random> 
 where Renderer: chip8_traits::Renderer, 
@@ -99,15 +102,6 @@ where Renderer: chip8_traits::Renderer,
     }
 }
 
-impl<Renderer, Keypad, Random> Interpreter<Renderer, Keypad, Random> 
-where Renderer: chip8_traits::Renderer, 
-    Keypad: chip8_traits::Keypad,
-    Random: chip8_traits::Random {
-    pub fn dump_program_counter(&self) -> usize {
-        chip8_traits::ProgramCounter::<crate::Instruction>::get_position(&self.program_counter)
-    }
-}
-
 impl<Renderer, Keypad, Random> chip8_traits::Interpreter for Interpreter<Renderer, Keypad, Random> 
 where Renderer: chip8_traits::Renderer, 
     Keypad: chip8_traits::Keypad,
@@ -182,5 +176,30 @@ where Renderer: chip8_traits::Renderer,
 
     fn dump_memory(&self) -> Vec<u8> {
         chip8_traits::Memory::dump(self.memory.as_ref())
+    }
+}
+
+pub struct InterpreterSnapshot {
+    pub program_counter_position: usize,
+    pub index_register_value: usize,
+    pub delay_timer_value: u8,
+    pub sound_timer_value: u8
+}
+
+impl<Renderer, Keypad, Random> Interpreter<Renderer, Keypad, Random> 
+where Renderer: chip8_traits::Renderer, 
+    Keypad: chip8_traits::Keypad,
+    Random: chip8_traits::Random {
+    pub fn dump_program_counter(&self) -> usize {
+        chip8_traits::ProgramCounter::<crate::Instruction>::get_position(&self.program_counter)
+    }
+
+    pub fn create_snapshot(&self) -> InterpreterSnapshot {
+        InterpreterSnapshot {
+            program_counter_position: self.program_counter.get_position(),
+            index_register_value: self.index_register,
+            delay_timer_value: self.delay_timer.get(),
+            sound_timer_value: self.sound_timer.get()
+        }
     }
 }

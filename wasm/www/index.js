@@ -1,4 +1,4 @@
-import { Index } from "../pkg/chip8_wasm";
+import { Index, InterpreterSnapshot } from "../pkg/chip8_wasm";
 import { mapKeyEventCodeToKeypadIndex } from "./utility";
 
 const pre = document.getElementById("chip8_render-canvas");
@@ -8,11 +8,35 @@ let indexReady = false;
 let programsList = null;
 let programsListReady = false;
 
+const updateElementById = (id, value) => {
+    const element = document.getElementById(id);
+    if (!element) {
+        console.error("Unable to update element with id '" + id + "', cannot find it");
+        return;
+    }
+    if (typeof element.update !== 'function') {
+        console.error("Unable to update element with id '" + id + "', does not contain an update function")
+        return;
+    }
+    element.update(value);
+}
+
+const updateSnapshot = () => {
+    let snapshot = index.create_interpreter_snapshot();
+
+    updateElementById("program_counter", snapshot.program_counter_position);
+    updateElementById("index_register", snapshot.index_register_value);
+    updateElementById("delay_timer", snapshot.delay_timer_value);
+    updateElementById("sound_timer", snapshot.sound_timer_value);
+}
+
 const renderLoop = () => {
     pre.textContent = index.render_text();
     index.update();
+
+    updateSnapshot();
   
-    requestAnimationFrame(renderLoop);
+    requestAnimationFrame(renderLoop); 
 };
 
 const handleKeydownEvent = (event) => {
