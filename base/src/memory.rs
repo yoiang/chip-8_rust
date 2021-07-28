@@ -39,3 +39,23 @@ impl chip8_traits::Memory for Memory {
         self.contents.clone()
     }
 }
+
+pub struct PartialSnapshot {
+    pub location: usize,
+    pub value: u8,
+}
+
+impl Memory {
+    pub fn snapshot(&self, start_location: usize, end_location: usize) -> Vec<PartialSnapshot> {
+        let mut result: Vec<PartialSnapshot> = vec![];
+
+        for location in start_location..=end_location {
+            result.push(PartialSnapshot {
+                location: location,
+                value: chip8_traits::Memory::get(self, location)
+            })
+        }
+
+        result
+    }
+}

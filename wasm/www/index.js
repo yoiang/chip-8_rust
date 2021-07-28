@@ -7,6 +7,7 @@ let index = null;
 let indexReady = false;
 let programsList = null;
 let programsListReady = false;
+let isPaused = false;
 
 const updateElementById = (id, value) => {
     const element = document.getElementById(id);
@@ -22,13 +23,14 @@ const updateElementById = (id, value) => {
 }
 
 const updateSnapshot = () => {
-    let snapshot = index.create_interpreter_snapshot();
+    let snapshot = index.create_interpreter_snapshot(6, 5);
 
     updateElementById("program_counter", snapshot.program_counter_position);
     updateElementById("index_register", snapshot.index_register_value);
     updateElementById("variable_registers", snapshot.variable_register_values);
     updateElementById("delay_timer", snapshot.delay_timer_value);
     updateElementById("sound_timer", snapshot.sound_timer_value);
+    updateElementById("partial_disassembler", snapshot.partial_disassemble);
 }
 
 const renderLoop = () => {
@@ -37,8 +39,25 @@ const renderLoop = () => {
 
     updateSnapshot();
   
-    requestAnimationFrame(renderLoop); 
+    if (!isPaused) {
+        requestAnimationFrame(renderLoop); 
+    }
 };
+
+const togglePause = () => {
+    isPaused = !isPaused;
+    if (!isPaused && indexReady) {
+        requestAnimationFrame(renderLoop);
+    }
+}
+
+const step = () => {
+    if (!isPaused) {
+        isPaused = true;
+    } else {
+        renderLoop();
+    }
+}
 
 const handleKeydownEvent = (event) => {
     const key = event.key;
@@ -63,6 +82,12 @@ const setIndex = (newIndex) => {
 
     document.addEventListener('keydown', handleKeydownEvent);
     document.addEventListener('keyup', handleKeyupEvent);
+
+    const pauseToggleElement = document.getElementById("play_pause");
+    pauseToggleElement.onclick = togglePause;
+
+    const stepElement = document.getElementById("step");
+    stepElement.onclick = step;
 
     requestAnimationFrame(renderLoop);
 };

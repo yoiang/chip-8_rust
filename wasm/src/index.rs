@@ -1,24 +1,9 @@
 use chip8_traits::Interpreter;
 use wasm_bindgen::prelude::*;
 use std::{borrow::{Borrow}, cell::{RefCell}, fmt, rc::Rc};
+use serde::{Serialize, Deserialize};
 
 use crate::{renderer::fmt_rendered_memory, utility::{js_value_as_usize, set_panic_hook}};
-
-// // A macro to provide `println!(..)`-style syntax for `console.log` logging.
-// macro_rules! console_log {
-//     ( $( $t:tt )* ) => {
-//         web_sys::console::log_1(&format!( $( $t )* ).into());
-//     }
-// }
-
-// macro_rules! console_log_unsafe {
-//     ( $( $t:tt )* ) => {
-//         #[allow(unused_unsafe)] // Currently unsafe not properly recognized by analyzer
-//         unsafe {
-//             console_log!($( $t )*);
-//         }
-//     }
-// }
 
 #[wasm_bindgen]
 pub struct Index {
@@ -115,7 +100,9 @@ pub struct InterpreterSnapshot {
     variable_register_values: [u8; 16],
     
     pub delay_timer_value: u8,
-    pub sound_timer_value: u8
+    pub sound_timer_value: u8,
+
+    partial_disassemble: Vec<PartialDisassembleSnapshot>
 }
 
 #[wasm_bindgen]
@@ -124,24 +111,55 @@ impl InterpreterSnapshot {
     pub fn variable_register_values(&self) -> js_sys::Uint8Array {
         return js_sys::Uint8Array::from(&self.variable_register_values[..]);
     }
+
+    #[wasm_bindgen(getter)]
+    pub fn partial_disassemble(&self) -> JsValue {
+        // TODO: remove unwrap and properly handle
+        JsValue::from_serde(&self.partial_disassemble).unwrap()
+    }
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct PartialDisassembleSnapshot {
+    pub location: usize,
+    pub value: (u8, u8)
+}
+
+// #[wasm_bindgen]
+// impl PartialDisassembleSnapshot {
+//    #[wasm_bindgen(getter)]
+//     pub fn value(&self) -> js_sys::Uint8Array {
+//         return js_sys::Uint8Array::from(&self.value[..]);
+//     }
+// }
 
 #[wasm_bindgen]
 impl Index {
-    pub fn create_interpreter_snapshot(&self) -> InterpreterSnapshot {
+    pub fn create_interpreter_snapshot(&self, count_before: usize, count_after: usize) -> InterpreterSnapshot {
         let chip8_base::interpreter::InterpreterSnapshot { 
             program_counter_position, 
             index_register_value, 
             variable_register_values,
             delay_timer_value, 
-            sound_timer_value} = self.interpreter.create_snapshot();
+            sound_timer_value,
+            partial_disassemble
+        } = self.interpreter.create_snapshot(chip8_base::interpreter::PartialDisassembleOptions{
+                count_before,
+                count_after,
+                fix_misalignment: true,
+                maintain_length: true
+            });
 
         InterpreterSnapshot {
             program_counter_position,
             index_register_value, 
             variable_register_values,
             delay_timer_value, 
-            sound_timer_value
+            sound_timer_value,
+            partial_disassemble: partial_disassemble.iter().map(|value| { PartialDisassembleSnapshot {
+                location: value.location,
+                value: value.value
+            } }).collect()
         }
     }
 }

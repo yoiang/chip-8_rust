@@ -187,6 +187,20 @@ pub struct InterpreterSnapshot {
 
     pub delay_timer_value: u8,
     pub sound_timer_value: u8,
+
+    pub partial_disassemble: Vec<PartialDisassembleSnapshot>
+}
+
+pub struct PartialDisassembleOptions {
+    pub count_before: usize, 
+    pub count_after: usize,
+    pub fix_misalignment: bool,
+    pub maintain_length: bool
+}
+
+pub struct PartialDisassembleSnapshot {
+    pub location: usize,
+    pub value: (u8, u8)
 }
 
 impl<Renderer, Keypad, Random> Interpreter<Renderer, Keypad, Random> 
@@ -197,7 +211,36 @@ where Renderer: chip8_traits::Renderer,
         chip8_traits::ProgramCounter::<crate::Instruction>::get_position(&self.program_counter)
     }
 
-    pub fn create_snapshot(&self) -> InterpreterSnapshot {
+    pub fn create_partial_disassemble_snapshot(&self, disassemble_options: PartialDisassembleOptions) -> Vec<PartialDisassembleSnapshot> {
+        // TODO: fix_misalignment
+        // TODO: maintain_length
+        let start_location = self.program_counter.get_position() - disassemble_options.count_before * 2;
+        let end_location = self.program_counter.get_position() + disassemble_options.count_after * 2 - 1;
+        let memory_snapshot = self.memory.snapshot(start_location, end_location);
+
+        let mut result: Vec<PartialDisassembleSnapshot> = vec![];
+
+        let mut is_first = true;
+        let mut first_value: u8 = 0;
+        let mut first_location: usize = 0;
+        for index in 0..memory_snapshot.len() {
+            if is_first {
+                first_value = memory_snapshot[index].value;
+                first_location = memory_snapshot[index].location;
+            } else {
+                result.push(PartialDisassembleSnapshot {
+                    location: first_location,
+                    value: (first_value, memory_snapshot[index].value)
+                });
+            }
+
+            is_first = !is_first;
+        }
+
+        result
+    }
+
+    pub fn create_snapshot(&self, disassemble_options: PartialDisassembleOptions) -> InterpreterSnapshot {
         InterpreterSnapshot {
             program_counter_position: self.program_counter.get_position(),
             
@@ -205,7 +248,9 @@ where Renderer: chip8_traits::Renderer,
             variable_register_values: self.variable_registers.get_all(),
 
             delay_timer_value: self.delay_timer.get(),
-            sound_timer_value: self.sound_timer.get()
+            sound_timer_value: self.sound_timer.get(),
+
+            partial_disassemble: self.create_partial_disassemble_snapshot(disassemble_options)
         }
     }
 }

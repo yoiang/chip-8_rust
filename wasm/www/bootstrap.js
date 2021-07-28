@@ -10,4 +10,6 @@ import("./components/DelayTimer")
 import("./components/SoundTimer")
 import("./components/VariableRegister")
 import("./components/VariableRegisters")
+import("./components/DisassemblerLine")
+import("./components/PartialDisassembler")
 
