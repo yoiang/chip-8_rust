@@ -58,7 +58,7 @@ class DisassemblerLine extends HTMLElement {
     render() {
       this.innerHTML = `
         <div class="disassembler_line${this.isCurrentLine ? " current_disassembler_line" : ""}">
-            ${renderHexValue(this.location, 4)}: ${renderHexValue(this.value[0]<< 8 | this.value[1], 4)} - <span class="disassembly">${this.disassembly}</span>
+            ${renderHexValue(this.location, 4)}: ${renderHexValue(this.value[0]<< 8 | this.value[1], 4, false)} - <span class="disassembly">${this.disassembly}</span>
         </div>
         `;
     }

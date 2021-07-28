@@ -6,8 +6,8 @@ export const renderNumberValue = (name, value, hexLength) => {
         `
 }
 
-export const renderHexValue = (value, hexLength) => {
-    return `<span class="hex_value">0x${value.toString(16).padStart(hexLength, "0")}</span>`
+export const renderHexValue = (value, hexLength, with0x = true) => {
+    return `<span class="hex_value">${with0x ? "0x" : ""}${value.toString(16).padStart(hexLength, "0")}</span>`
 }
 
 export const isArrayContentsEqual = (left, right) => {
