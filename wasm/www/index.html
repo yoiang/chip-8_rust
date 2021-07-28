@@ -28,11 +28,13 @@
 
       @media (prefers-color-scheme: dark) {
         body {
+          color: #A5E6BA;
           background-color: #3D2C2E;
         }
       }
       @media (prefers-color-scheme: light) {
         body {
+          color: #5F7367;
           background-color: rgb(241, 237, 237);
         }
       }
@@ -105,6 +107,72 @@
         padding-right: 1%;
         overflow: hidden;
       }
+
+      .instruction {
+        font-style: italic;
+        color: #5F7367;
+      }
+
+      /* .memory_location {
+        font-weight: 600;
+      } 
+      */
+
+      .variable_register {
+        margin-bottom: 1%;
+      }
+
+      .variable_register > .name {
+        font-weight: 700;
+        color: #5F7367;
+      }
+
+      .current_disassembler_line {
+        background-color: green;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .hex_value {
+          color: #E87461;
+        }
+
+        .decimal_value {
+          color: #A4BEF3;
+        }
+
+        .log_container {
+          border-color: #5F7367;
+        }
+
+        .instruction {
+          color: #5F7367;
+        }
+
+        .variable_register > .name {
+          color: #5F7367;
+        }
+      }
+      @media (prefers-color-scheme: light) {
+        .hex_value {
+          color: #E87461;
+        }
+
+        .decimal_value {
+          color: #A4BEF3;
+        }
+
+        .log_container {
+          border-color: #A5E6BA;
+        }
+
+        .instruction {
+          color: #A5E6BA;
+        }
+
+        .variable_register > .name {
+          color: #A5E6BA;
+        }
+      }
     </style>
     <style>
       #memory_interpreter {
@@ -125,16 +193,6 @@
         color: black;
       }
 
-      .instruction {
-        font-style: italic;
-        color: #5F7367;
-      }
-
-      /* .memory_location {
-        font-weight: 600;
-      } 
-      */
-
       #middle {
         margin: 1%;
         margin-top: 0;
@@ -151,15 +209,6 @@
       #variable_registers {
         display: flex;
         flex-direction: column;
-      }
-
-      .variable_register {
-        margin-bottom: 1%;
-      }
-
-      .variable_register > .name {
-        font-weight: 700;
-        color: #5F7367;
       }
 
       #program {

@@ -215,7 +215,7 @@ where Renderer: chip8_traits::Renderer,
         // TODO: fix_misalignment
         // TODO: maintain_length
         let start_location = self.program_counter.get_position() - disassemble_options.count_before * 2;
-        let end_location = self.program_counter.get_position() + disassemble_options.count_after * 2 - 1;
+        let end_location = self.program_counter.get_position() + disassemble_options.count_after * 2 + 1;
         let memory_snapshot = self.memory.snapshot(start_location, end_location);
 
         let mut result: Vec<PartialDisassembleSnapshot> = vec![];

@@ -9,7 +9,7 @@ class PartialDisassembler extends HTMLElement {
       this.render();
     }
 
-    update(new_values) {
+    update(new_program_counter_location, new_values) {
         if (this.values === new_values) {
             return;
         }
@@ -38,7 +38,7 @@ class PartialDisassembler extends HTMLElement {
                 // TODO: report
                 return;
             }
-            element.update(value.location, value.value)
+            element.update(new_program_counter_location === value.location, value.location, value.value)
         })
     }
   

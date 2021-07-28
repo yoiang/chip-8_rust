@@ -9,7 +9,7 @@ let programsList = null;
 let programsListReady = false;
 let isPaused = false;
 
-const updateElementById = (id, value) => {
+const updateElementById = (id, valueOrFunction) => {
     const element = document.getElementById(id);
     if (!element) {
         console.error("Unable to update element with id '" + id + "', cannot find it");
@@ -19,18 +19,25 @@ const updateElementById = (id, value) => {
         console.error("Unable to update element with id '" + id + "', does not contain an update function")
         return;
     }
-    element.update(value);
+
+    if (typeof valueOrFunction === 'function') {
+        valueOrFunction(element);
+    } else {
+        element.update(valueOrFunction);
+    }
 }
 
 const updateSnapshot = () => {
-    let snapshot = index.create_interpreter_snapshot(6, 5);
+    let snapshot = index.create_interpreter_snapshot(6, 6);
 
     updateElementById("program_counter", snapshot.program_counter_position);
     updateElementById("index_register", snapshot.index_register_value);
     updateElementById("variable_registers", snapshot.variable_register_values);
     updateElementById("delay_timer", snapshot.delay_timer_value);
     updateElementById("sound_timer", snapshot.sound_timer_value);
-    updateElementById("partial_disassembler", snapshot.partial_disassemble);
+    updateElementById("partial_disassembler", (element) => {
+        element.update(snapshot.program_counter_position, snapshot.partial_disassemble)
+    });
 }
 
 const renderLoop = () => {
