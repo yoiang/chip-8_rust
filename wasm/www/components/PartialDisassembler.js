@@ -45,7 +45,7 @@ class PartialDisassembler extends HTMLElement {
     render() {
         const contents = this.values.map((value, index) => `<disassembler-line id="disassemblerLine${index}"></disassembler-line>`)
         this.innerHTML = `
-            <div class="contents">
+            <div class="partial-disassembler">
                 ${contents.join("")}
             </div>
             `;

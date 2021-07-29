@@ -31,7 +31,7 @@ class VariableRegister extends HTMLElement {
   
     render() {
       this.innerHTML = `
-        <div class="contents">
+        <div class="variable-register">
             ${renderNumberValue(`V${this.index}`, this.value, 2)}
         </div>
         `;

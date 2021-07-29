@@ -39,7 +39,7 @@ class VariableRegisters extends HTMLElement {
     render() {
         const contents = [...new Array(16)].map((value, index) => `<variable-register id="variableRegister${index}" index="${index}"></variable-register>`)
         this.innerHTML = `
-            <div class="contents">
+            <div class="variable-registers">
                 ${contents.join("")}
             </div>
             `;

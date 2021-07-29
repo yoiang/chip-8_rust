@@ -28,7 +28,7 @@ const updateElementById = (id, valueOrFunction) => {
 }
 
 const updateSnapshot = () => {
-    let snapshot = index.create_interpreter_snapshot(6, 6);
+    let snapshot = index.create_interpreter_snapshot(8, 7);
 
     updateElementById("program_counter", snapshot.program_counter_position);
     updateElementById("index_register", snapshot.index_register_value);
@@ -79,6 +79,33 @@ const handleKeyupEvent = (event) => {
     const result = index.keyup(key_index);
 }
 
+const sizeRenderCanvasContainer = (element) => {
+    const parentWidth = element.parentElement.clientWidth - element.parentElement.clientWidth * 0.1;
+    const parentHeight = element.parentElement.clientHeight - element.parentElement.clientHeight * 0.1;
+
+    let height = parentHeight;
+    let width = height * 2;
+    if (width > parentWidth - element.parentElement.clientWidth * 0.1) {
+        width = parentWidth - element.parentElement.clientWidth * 0.1;
+        height = width / 2;
+    }
+
+    element.setAttribute(
+        "style", 
+        `
+         width: ${width / parentWidth * 100}%; 
+         height: ${height / parentHeight * 100}%;
+        `
+    );
+}
+
+const renderCanvasContainerResize = (event) => {
+    // const element = event.target;
+    const element = document.getElementById("chip8_render-canvas_container");
+
+    sizeRenderCanvasContainer(element);
+}
+
 const setIndex = (newIndex) => {
     if (indexReady) {
         console.error("setIndex called by index already set: ", newIndex);
@@ -96,6 +123,12 @@ const setIndex = (newIndex) => {
 
     const stepElement = document.getElementById("step");
     stepElement.onclick = step;
+
+    window.addEventListener('resize', renderCanvasContainerResize);
+    setTimeout(() => {
+        const renderCanvasContainer = document.getElementById("chip8_render-canvas_container");
+        sizeRenderCanvasContainer(renderCanvasContainer);    
+    }, 1);
 
     requestAnimationFrame(renderLoop);
 };
