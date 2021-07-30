@@ -249,6 +249,7 @@ fn push_stack<
     })
 }
 
+/// Sets the program counter to the location on the top of the stack and removes it from the stack
 fn pop_stack<
     Instruction: chip8_traits::Instruction,
     Stack: chip8_traits::Stack,
@@ -269,6 +270,7 @@ fn pop_stack<
     })
 }
 
+/// Set program counter to NNN
 fn jump<
     Instruction: chip8_traits::Instruction, 
     ProgramCounter: chip8_traits::ProgramCounter<Instruction>
@@ -284,6 +286,7 @@ fn jump<
     })
 } 
 
+/// Set to VX value NN
 fn set_register<
     Instruction: chip8_traits::Instruction
 >(apply_instruction: bool, instruction: Instruction, variable_registers: &mut VariableRegisters) -> ExecuteResult<Instruction> {
@@ -302,17 +305,18 @@ fn set_register<
     })
 }
 
+/// Add to VX value NN
 fn add_to_register<
     Instruction: chip8_traits::Instruction
 >(apply_instruction: bool, instruction: Instruction, variable_registers: &mut VariableRegisters) -> ExecuteResult<Instruction> {
-    let index = count8(instruction.x().to_vec());
+    let x = count8(instruction.x().to_vec());
     let value = count8(instruction.nn().to_vec());
 
     if apply_instruction {
-        match variable_registers.get(index) {
-            Some(index_value) => {
-                let new_value = index_value.wrapping_add(value);
-                match variable_registers.set(index, new_value) {
+        match variable_registers.get(x) {
+            Some(x_value) => {
+                let new_value = x_value.wrapping_add(value);
+                match variable_registers.set(x, new_value) {
                     Ok(_) => {},
                     Err(_) => return Err(InstructionError::InstructionExecuteError(instruction))
                 }
@@ -321,7 +325,7 @@ fn add_to_register<
         }
     }
     Ok(ExecutionState {
-        instruction_disassembly: format!("V{} += {:#04x} / {} wrapped", index, value, value) 
+        instruction_disassembly: format!("V{} += {:#04x} / {} wrapped", x, value, value) 
     })
 }
 
@@ -976,7 +980,9 @@ fn memory_to_register<
 
 #[cfg(test)]
 mod cpu_tests {
-    use crate::{Instruction, ProgramCounter, ScreenMemory, Stack, cpu::{clear_screen, push_stack}};
+    use crate::{Instruction, ProgramCounter, ScreenMemory, Stack, VariableRegisters, cpu::add_to_register};
+
+    use super::{clear_screen, jump, pop_stack, push_stack, set_register};
 
 
     // TODO: test execute
@@ -1038,5 +1044,129 @@ mod cpu_tests {
         assert_eq!(chip8_traits::Stack::pop(&mut stack), Some(0x0123));
 
         assert_eq!(chip8_traits::ProgramCounter::<Instruction>::get_position(&program_counter), 0x0456);
+    }
+
+    #[test]
+    fn pop_stack_test() {
+        let mut stack = Stack::new();
+        let mut program_counter = ProgramCounter::new();
+
+        assert_eq!(stack.is_empty(), true);
+        assert_eq!(chip8_traits::ProgramCounter::<Instruction>::get_position(&program_counter), 0);
+
+        let first_program_counter_position = chip8_traits::ProgramCounter::<Instruction>::get_position(&program_counter);
+
+        push_stack(true, Instruction::new(0x01, 0x23), &mut stack, &mut program_counter);
+
+        push_stack(true, Instruction::new(0x14, 0x56), &mut stack, &mut program_counter);
+
+        let pre_pop_program_counter_position = chip8_traits::ProgramCounter::<Instruction>::get_position(&program_counter);
+
+        assert_eq!(stack.is_empty(), false);
+
+        pop_stack(false, Instruction::new(0x00, 0x00), &mut stack, &mut program_counter);
+
+        assert_eq!(pre_pop_program_counter_position, chip8_traits::ProgramCounter::<Instruction>::get_position(&program_counter));
+
+        pop_stack(false, Instruction::new(0x00, 0x00), &mut stack, &mut program_counter);
+
+        assert_eq!(stack.is_empty(), false);
+
+        pop_stack(true, Instruction::new(0x00, 0x00), &mut stack, &mut program_counter);
+
+        assert_eq!(0x0123, chip8_traits::ProgramCounter::<Instruction>::get_position(&program_counter));
+
+        assert_eq!(stack.is_empty(), false);
+
+        pop_stack(true, Instruction::new(0x00, 0x00), &mut stack, &mut program_counter);
+
+        assert_eq!(first_program_counter_position, chip8_traits::ProgramCounter::<Instruction>::get_position(&program_counter));
+
+        assert_eq!(stack.is_empty(), true);
+    }
+
+    #[test]
+    fn jump_test() {
+        let mut program_counter = ProgramCounter::new();
+
+        let original_program_counter_position = chip8_traits::ProgramCounter::<Instruction>::get_position(&program_counter);
+
+        jump(false, Instruction::new(0x01, 0x23), &mut program_counter);
+
+        assert_eq!(original_program_counter_position, chip8_traits::ProgramCounter::<Instruction>::get_position(&program_counter));
+
+        jump(true, Instruction::new(0x01, 0x23), &mut program_counter);
+
+        assert_eq!(0x0123, chip8_traits::ProgramCounter::<Instruction>::get_position(&program_counter));
+    }
+
+    fn test_set_variable_register_at_index(index: u8, variable_registers: &mut VariableRegisters) {
+        let original_value = variable_registers.get(index);
+
+        let nn: u8 = 0x12; // TODO: random value
+        let instruction = Instruction::new(index, nn);
+
+        set_register(false, instruction, variable_registers);
+
+        assert_eq!(original_value, variable_registers.get(index));
+
+        set_register(true, instruction, variable_registers);
+
+        assert_eq!(Some(nn), variable_registers.get(index));
+    }
+
+    #[test]
+    fn set_register_test() {
+        let mut variable_registers = VariableRegisters::new();
+
+        test_set_variable_register_at_index(0, &mut variable_registers);
+
+        test_set_variable_register_at_index(5, &mut variable_registers); // TODO: random index
+    }
+
+    fn test_add_to_register_at_index(index: u8, variable_registers: &mut VariableRegisters) {
+        let original_value = variable_registers.get(index);
+
+        let nn: u8 = 0x12; // TODO: random value
+        let instruction = Instruction::new(index, nn);
+
+        add_to_register(false, instruction, variable_registers);
+
+        assert_eq!(original_value, variable_registers.get(index));
+
+        add_to_register(true, instruction, variable_registers);
+
+        assert_eq!(Some(nn), variable_registers.get(index));
+
+        add_to_register(true, instruction, variable_registers);
+
+        assert_eq!(Some(nn * 2), variable_registers.get(index));
+
+        add_to_register(true, instruction, variable_registers);
+        add_to_register(true, instruction, variable_registers);
+        add_to_register(true, instruction, variable_registers);
+        add_to_register(true, instruction, variable_registers);
+        add_to_register(true, instruction, variable_registers);
+        add_to_register(true, instruction, variable_registers);
+        add_to_register(true, instruction, variable_registers);
+        add_to_register(true, instruction, variable_registers);
+        add_to_register(true, instruction, variable_registers);
+        add_to_register(true, instruction, variable_registers);
+        add_to_register(true, instruction, variable_registers);
+        add_to_register(true, instruction, variable_registers);
+        add_to_register(true, instruction, variable_registers);
+        add_to_register(true, instruction, variable_registers);
+        add_to_register(true, instruction, variable_registers);
+
+        assert_eq!(Some(nn.wrapping_mul(17)), variable_registers.get(index));
+    }
+
+    #[test]
+    fn add_to_register_test() {
+        let mut variable_registers = VariableRegisters::new();
+
+        test_add_to_register_at_index(3, &mut variable_registers);
+
+        test_add_to_register_at_index(8, &mut variable_registers); // TODO: random index
     }
 }
