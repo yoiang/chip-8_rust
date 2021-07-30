@@ -2,6 +2,8 @@
 
 ### The "Hello World" of emulator building and a first stab at Rust
 
+[![Coverage Status](https://coveralls.io/repos/github/yoiang/chip-8_rust/badge.svg?branch=main)](https://coveralls.io/github/yoiang/chip-8_rust?branch=main)
+
 Please excuse the mess, recommendations welcome
 
 #### Thanks to:
