@@ -1,4 +1,4 @@
-use std::{fs, usize};
+use std::{borrow::Borrow, fs, usize};
 
 use chip8_traits::{ProgramCounter, Timer};
 
@@ -89,7 +89,14 @@ where Renderer: chip8_traits::Renderer,
     }
 
     fn fetch(&mut self) -> Box<crate::Instruction> {
-        chip8_traits::ProgramCounter::read(&mut self.program_counter, self.memory.as_ref())
+        // chip8_traits::ProgramCounter::read(&mut self.program_counter, self.memory.as_ref())
+
+        let position = self.program_counter.get_position();
+        let first = chip8_traits::Memory::get(self.memory.as_ref(), position);
+        let second = chip8_traits::Memory::get(self.memory.as_ref(), position + 1);
+        self.program_counter.skip();
+
+        Box::new(super::Instruction::new(first, second))
     }
 
     fn reset(&mut self) {
@@ -214,7 +221,7 @@ where Renderer: chip8_traits::Renderer,
     Keypad: chip8_traits::Keypad,
     Random: chip8_traits::Random {
     pub fn dump_program_counter(&self) -> usize {
-        chip8_traits::ProgramCounter::<crate::Instruction>::get_position(&self.program_counter)
+        chip8_traits::ProgramCounter::get_position(&self.program_counter)
     }
 
     // TODO: figure out a way to separate from mutating execute
