@@ -43,7 +43,6 @@ pub fn execute<
         0x03 => return skip_if_equal_value(apply_instruction, instruction, variable_registers, program_counter),
         0x04 => return skip_if_not_equal_to_value(apply_instruction, instruction, variable_registers, program_counter),
         0x05 => return skip_if_equal(apply_instruction, instruction, variable_registers, program_counter),
-        0x09 => return skip_if_not_equal(apply_instruction, instruction, variable_registers, program_counter),
         0x06 => return set_register(apply_instruction, instruction, variable_registers),
         0x07 => return add_to_register(apply_instruction, instruction, variable_registers),
         0x08 => {
@@ -62,6 +61,7 @@ pub fn execute<
                 _ => return Err(InstructionError::UnsupportedInstructionError(instruction))
             }
         },
+        0x09 => return skip_if_not_equal(apply_instruction, instruction, variable_registers, program_counter),
         0x0a => return set_index_register(apply_instruction, instruction, index_register),
         0x0b => return jump_v0(apply_instruction, instruction, program_counter, variable_registers), // TODO: optional BXNN
         0x0c => return set_register_random(apply_instruction, instruction, variable_registers, random),
@@ -91,6 +91,7 @@ pub fn execute<
     }
 }
 
+/// Skip if value in VX is equal to NN
 fn skip_if_equal_value<
     Instruction: chip8_traits::Instruction,
     ProgramCounter: chip8_traits::ProgramCounter<Instruction>
@@ -119,6 +120,7 @@ fn skip_if_equal_value<
     })
 }
 
+/// Skip if value in VX is not equal to NN
 fn skip_if_not_equal_to_value<
     Instruction: chip8_traits::Instruction,
     ProgramCounter: chip8_traits::ProgramCounter<Instruction>
@@ -984,66 +986,22 @@ mod cpu_tests {
 
     use super::{clear_screen, jump, pop_stack, push_stack, set_register};
 
-
     // TODO: test execute
-
-    // TODO: test skip
-    // #[test]
-    // fn skip_test() {
-    //     let instruction: Instruction = Instruction::new(first, second)
-    // } 
-
-    fn is_empty(screen_memory: &ScreenMemory) -> bool {
-        for value in screen_memory.iter() {
-            if value[0] {
-                return false;
-            } 
-        }
-        return true;
-    }
 
     #[test]
     fn clear_screen_test() {
         let mut screen_memory = ScreenMemory::new(10, 10);
         chip8_traits::ScreenMemory::display(&mut screen_memory, 0, 0, [0xff, 0x13, 0x53, 0x5a].iter(), 4);
 
-        assert_eq!(is_empty(&screen_memory), false);
+        assert_eq!(screen_memory.is_empty(), false);
         
         clear_screen::<crate::Instruction, crate::ScreenMemory>(false, &mut screen_memory);
 
-        assert_eq!(is_empty(&screen_memory), false);
+        assert_eq!(screen_memory.is_empty(), false);
 
         clear_screen::<crate::Instruction, crate::ScreenMemory>(true, &mut screen_memory);
         
-        assert_eq!(is_empty(&screen_memory), true);
-    }
-
-    #[test]
-    fn push_stack_test() {
-        let mut stack = Stack::new();
-        let mut program_counter = ProgramCounter::new();
-
-        assert_eq!(stack.is_empty(), true);
-        assert_eq!(chip8_traits::ProgramCounter::<Instruction>::get_position(&program_counter), 0);
-
-        push_stack(false, Instruction::new(0x01, 0x23), &mut stack, &mut program_counter);
-
-        assert_eq!(stack.is_empty(), true);
-        assert_eq!(chip8_traits::ProgramCounter::<Instruction>::get_position(&program_counter), 0);
-
-        push_stack(true, Instruction::new(0x01, 0x23), &mut stack, &mut program_counter);
-
-        assert_eq!(stack.is_empty(), false);
-        assert_eq!(chip8_traits::Stack::pop(&mut stack), Some(0x0));
-
-        assert_eq!(chip8_traits::ProgramCounter::<Instruction>::get_position(&program_counter), 0x0123);
-
-        push_stack(true, Instruction::new(0x14, 0x56), &mut stack, &mut program_counter);
-
-        assert_eq!(stack.is_empty(), false);
-        assert_eq!(chip8_traits::Stack::pop(&mut stack), Some(0x0123));
-
-        assert_eq!(chip8_traits::ProgramCounter::<Instruction>::get_position(&program_counter), 0x0456);
+        assert_eq!(screen_memory.is_empty(), true);
     }
 
     #[test]
@@ -1098,6 +1056,39 @@ mod cpu_tests {
         jump(true, Instruction::new(0x01, 0x23), &mut program_counter);
 
         assert_eq!(0x0123, chip8_traits::ProgramCounter::<Instruction>::get_position(&program_counter));
+    }
+
+    #[test]
+    fn push_stack_test() {
+        let mut stack = Stack::new();
+        let mut program_counter = ProgramCounter::new();
+
+        assert_eq!(stack.is_empty(), true);
+        assert_eq!(chip8_traits::ProgramCounter::<Instruction>::get_position(&program_counter), 0);
+
+        push_stack(false, Instruction::new(0x01, 0x23), &mut stack, &mut program_counter);
+
+        assert_eq!(stack.is_empty(), true);
+        assert_eq!(chip8_traits::ProgramCounter::<Instruction>::get_position(&program_counter), 0);
+
+        push_stack(true, Instruction::new(0x01, 0x23), &mut stack, &mut program_counter);
+
+        assert_eq!(stack.is_empty(), false);
+        assert_eq!(chip8_traits::Stack::pop(&mut stack), Some(0x0));
+
+        assert_eq!(chip8_traits::ProgramCounter::<Instruction>::get_position(&program_counter), 0x0123);
+
+        push_stack(true, Instruction::new(0x14, 0x56), &mut stack, &mut program_counter);
+
+        assert_eq!(stack.is_empty(), false);
+        assert_eq!(chip8_traits::Stack::pop(&mut stack), Some(0x0123));
+
+        assert_eq!(chip8_traits::ProgramCounter::<Instruction>::get_position(&program_counter), 0x0456);
+    }
+
+    #[test]
+    fn skip_if_equal_value_test() {
+
     }
 
     fn test_set_variable_register_at_index(index: u8, variable_registers: &mut VariableRegisters) {

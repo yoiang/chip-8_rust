@@ -27,6 +27,15 @@ impl ScreenMemory {
     pub fn iter(&self) -> slice::Iter<Vec<bool>> {
         return self.contents.iter();
     }
+
+    pub fn is_empty(&self) -> bool {
+        for value in self.iter() {
+            if value[0] {
+                return false;
+            } 
+        }
+        return true;
+    }
 }
 
 impl chip8_traits::ScreenMemory for ScreenMemory {
