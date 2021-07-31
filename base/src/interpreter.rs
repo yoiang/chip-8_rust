@@ -2,7 +2,7 @@ use std::{borrow::{BorrowMut}, fs, usize};
 
 use chip8_traits::{ProgramCounter, Timer};
 
-use crate::{DelayTimer, Instruction, SoundTimer, bus::Bus, cpu::execute};
+use crate::{Instruction, bus::Bus, cpu::execute};
 
 
 pub struct Interpreter<Renderer, Keypad, Random> 
@@ -87,8 +87,8 @@ where Renderer: chip8_traits::Renderer,
 
     pub fn new_crate_defaults(renderer: Renderer, keypad: Keypad, random: Random) -> Interpreter<Renderer, Keypad, Random> {
         Interpreter::new(
-             crate::Memory::new(4096),
-             crate::ScreenMemory::new(64, 32),
+             crate::Memory::new_chip8(),
+             crate::ScreenMemory::new_chip8(),
             renderer,
             crate::Stack::new(),
             crate::DelayTimer::new(),

@@ -2,9 +2,9 @@ use chip8_base::{DelayTimer, Font, Memory, ProgramCounter, ScreenMemory, SoundTi
 
 pub fn new() -> chip8_base::Interpreter<crate::renderer::Renderer, crate::keypad::Keypad, crate::random::Random> {
     chip8_base::Interpreter::new(
-        Memory::new(4096),
+        Memory::new_chip8(),
 
-        ScreenMemory::new(64, 32),
+        ScreenMemory::new_chip8(),
 
         crate::renderer::Renderer::new(),
 

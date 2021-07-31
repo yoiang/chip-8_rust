@@ -7,7 +7,7 @@ pub struct ScreenMemory {
 }
 
 impl ScreenMemory {
-    pub fn new(width: usize, height: usize) -> ScreenMemory {
+    pub fn new(width: usize, height: usize) -> Self {
         let mut result = ScreenMemory {
             contents: vec![],
             width: 0,
@@ -16,6 +16,10 @@ impl ScreenMemory {
         result.set_dimensions(width, height);
 
         result
+    }
+
+    pub fn new_chip8() -> Self {
+        ScreenMemory::new(64, 32)
     }
 
     pub fn set_dimensions(&mut self, width: usize, height: usize) {

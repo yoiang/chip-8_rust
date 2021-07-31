@@ -11,6 +11,10 @@ impl Memory {
         }
     }
 
+    pub fn new_chip8() -> Self {
+        Memory::new(4096)
+    }
+
     pub fn clear(&mut self) {
         self.contents = vec![0; self.contents.len()];
     }
