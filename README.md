@@ -2,7 +2,13 @@
 
 ### The "Hello World" of emulator building and a first stab at Rust
 
-Please excuse the mess, recommendations welcome
+[![Coverage Status](https://coveralls.io/repos/github/yoiang/chip-8_rust/badge.svg?branch=main)](https://coveralls.io/github/yoiang/chip-8_rust?branch=main)
+
+Please excuse the mess, work in progress, recommendations welcome
+
+Currently crates include:
+* ascii based console binary
+* deployable WebAssembly webpage - https://yoiang.github.io/chip-8_rust/
 
 #### Thanks to:
 * [Bryan Li](https://github.com/bbbryan14) for co-motivating us to learn Rust
