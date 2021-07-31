@@ -55,14 +55,14 @@
 /******/ 		"../pkg/chip8_wasm_bg.wasm": function() {
 /******/ 			return {
 /******/ 				"./chip8_wasm_bg.js": {
-/******/ 					"__wbindgen_json_parse": function(p0i32,p1i32) {
-/******/ 						return installedModules["../pkg/chip8_wasm_bg.js"].exports["__wbindgen_json_parse"](p0i32,p1i32);
-/******/ 					},
 /******/ 					"__wbindgen_object_drop_ref": function(p0i32) {
 /******/ 						return installedModules["../pkg/chip8_wasm_bg.js"].exports["__wbindgen_object_drop_ref"](p0i32);
 /******/ 					},
 /******/ 					"__wbindgen_string_new": function(p0i32,p1i32) {
 /******/ 						return installedModules["../pkg/chip8_wasm_bg.js"].exports["__wbindgen_string_new"](p0i32,p1i32);
+/******/ 					},
+/******/ 					"__wbindgen_json_parse": function(p0i32,p1i32) {
+/******/ 						return installedModules["../pkg/chip8_wasm_bg.js"].exports["__wbindgen_json_parse"](p0i32,p1i32);
 /******/ 					},
 /******/ 					"__wbg_new_59cb74e423758ede": function() {
 /******/ 						return installedModules["../pkg/chip8_wasm_bg.js"].exports["__wbg_new_59cb74e423758ede"]();
@@ -198,7 +198,7 @@
 /******/ 				promises.push(installedWasmModuleData);
 /******/ 			else {
 /******/ 				var importObject = wasmImportObjects[wasmModuleId]();
-/******/ 				var req = fetch(__webpack_require__.p + "" + {"../pkg/chip8_wasm_bg.wasm":"70cdfa84c7d8ea96cf6c"}[wasmModuleId] + ".module.wasm");
+/******/ 				var req = fetch(__webpack_require__.p + "" + {"../pkg/chip8_wasm_bg.wasm":"e7e4405125e50f582858"}[wasmModuleId] + ".module.wasm");
 /******/ 				var promise;
 /******/ 				if(importObject instanceof Promise && typeof WebAssembly.compileStreaming === 'function') {
 /******/ 					promise = Promise.all([WebAssembly.compileStreaming(req), importObject]).then(function(items) {
