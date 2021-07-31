@@ -46,7 +46,7 @@ mod cpu_tests {
     fn clear_screen_test() {
         let instruction = Instruction::new(0x00, 0xe0);
 
-        let mut interpreter = Interpreter::new_crate_defaults(Box::new(MockRenderer::new()), Box::new(MockKeypad::new()), Box::new(MockRandom::new()));
+        let mut interpreter = Interpreter::new_crate_defaults(MockRenderer::new(), MockKeypad::new(), MockRandom::new());
         let mut bus = interpreter.create_bus();
         let font_start: usize = 200;
 
@@ -69,7 +69,7 @@ mod cpu_tests {
     fn pop_stack_test() {
         let instruction = Instruction::new(0x00, 0xee);
 
-        let mut interpreter = Interpreter::new_crate_defaults(Box::new(MockRenderer::new()), Box::new(MockKeypad::new()), Box::new(MockRandom::new()));
+        let mut interpreter = Interpreter::new_crate_defaults(MockRenderer::new(), MockKeypad::new(), MockRandom::new());
         let mut bus = interpreter.create_bus();
         let font_start: usize = 200;
 

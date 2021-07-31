@@ -9,18 +9,19 @@ pub struct Interpreter<Renderer, Keypad, Random>
 where Renderer: chip8_traits::Renderer, 
     Keypad: chip8_traits::Keypad,
     Random: chip8_traits::Random {
-    memory: Box<crate::Memory>,
 
-    screen_memory: Box<crate::ScreenMemory>,
+    memory: crate::Memory,
 
-    renderer: Box<Renderer>,
+    screen_memory: crate::ScreenMemory,
 
-    stack: Box<crate::Stack>,
+    renderer: Renderer,
 
-    delay_timer: Box<DelayTimer>,
-    sound_timer: Box<SoundTimer>,
+    stack: crate::Stack,
 
-    keypad: Box<Keypad>,
+    delay_timer: crate::DelayTimer,
+    sound_timer: crate::SoundTimer,
+
+    keypad: Keypad,
 
     program_counter: crate::ProgramCounter,
 
@@ -31,7 +32,7 @@ where Renderer: chip8_traits::Renderer,
     font: crate::Font,
     font_start: usize,
 
-    random: Box<Random>,
+    random: Random,
 }
 
 impl<Renderer, Keypad, Random> Interpreter<Renderer, Keypad, Random> 
@@ -39,19 +40,19 @@ where Renderer: chip8_traits::Renderer,
     Keypad: chip8_traits::Keypad,
     Random: chip8_traits::Random  {
     pub fn new(
-        memory: Box<crate::Memory>,
-        screen_memory: Box<crate::ScreenMemory>,
-        renderer: Box<Renderer>,
-        stack: Box<crate::Stack>,
+        memory: crate::Memory,
+        screen_memory: crate::ScreenMemory,
+        renderer: Renderer,
+        stack: crate::Stack,
 
-        delay_timer: Box<DelayTimer>,
-        sound_timer: Box<SoundTimer>,
+        delay_timer: crate::DelayTimer,
+        sound_timer: crate::SoundTimer,
 
-        keypad: Box<Keypad>,
+        keypad: Keypad,
 
         program_counter: crate::ProgramCounter,
 
-        random: Box<Random>,
+        random: Random,
 
         font: crate::Font,
     ) -> Interpreter<Renderer, Keypad, Random> {
@@ -84,14 +85,14 @@ where Renderer: chip8_traits::Renderer,
         }
     }
 
-    pub fn new_crate_defaults(renderer: Box<Renderer>, keypad: Box<Keypad>, random: Box<Random>) -> Interpreter<Renderer, Keypad, Random> {
+    pub fn new_crate_defaults(renderer: Renderer, keypad: Keypad, random: Random) -> Interpreter<Renderer, Keypad, Random> {
         Interpreter::new(
-             Box::new(crate::Memory::new(4096)),
-             Box::new(crate::ScreenMemory::new(64, 32)),
+             crate::Memory::new(4096),
+             crate::ScreenMemory::new(64, 32),
             renderer,
-            Box::new(crate::Stack::new()),
-            Box::new(crate::DelayTimer::new()),
-            Box::new(crate::SoundTimer::new()),
+            crate::Stack::new(),
+            crate::DelayTimer::new(),
+            crate::SoundTimer::new(),
             keypad,
             crate::ProgramCounter::new(),
             random,
@@ -115,15 +116,15 @@ where Renderer: chip8_traits::Renderer,
     }
 
     pub fn apply_font(&mut self, font: impl chip8_traits::Font) {
-        font.apply(self.memory.as_mut(), self.font_start);
+        font.apply(&mut self.memory, self.font_start);
     }
 
     fn fetch(&mut self) -> Box<crate::Instruction> {
         // chip8_traits::ProgramCounter::read(&mut self.program_counter, self.memory.as_ref())
 
         let position = self.program_counter.get_position();
-        let first = chip8_traits::Memory::get(self.memory.as_ref(), position);
-        let second = chip8_traits::Memory::get(self.memory.as_ref(), position + 1);
+        let first = chip8_traits::Memory::get(&self.memory, position);
+        let second = chip8_traits::Memory::get(&self.memory, position + 1);
         self.program_counter.skip();
 
         Box::new(super::Instruction::new(first, second))
@@ -147,7 +148,7 @@ where Renderer: chip8_traits::Renderer,
         self.reset();
         
         for (index, value) in program.iter().enumerate() {
-            chip8_traits::Memory::set(self.memory.as_mut(), start_position + index, *value);
+            chip8_traits::Memory::set(&mut self.memory, start_position + index, *value);
         }
         chip8_traits::ProgramCounter::set_position(&mut self.program_counter, start_position);
     }
@@ -174,15 +175,15 @@ where Renderer: chip8_traits::Renderer,
             true,
             *instruction.as_ref(), 
             &mut self.program_counter, 
-            self.stack.as_mut(), 
-            self.memory.as_mut(),
-            self.screen_memory.as_mut(),
+            &mut self.stack, 
+            &mut self.memory,
+            &mut self.screen_memory,
             &mut self.variable_registers,
-            self.keypad.as_mut(),
+            &mut self.keypad,
             &mut self.index_register,
-            self.delay_timer.as_mut(),
-            self.sound_timer.as_mut(),
-            self.random.as_mut(),
+            &mut self.delay_timer,
+            &mut self.sound_timer,
+            &mut self.random,
             self.font_start
         );
         match result {
@@ -193,13 +194,13 @@ where Renderer: chip8_traits::Renderer,
         }
 
         // TODO: something seems broken that I can't do "use" and have to fully qualify or when that fails, cast
-        let result = (self.sound_timer.as_mut() as &mut dyn chip8_traits::Timer).update();
+        let result = (&mut self.sound_timer as &mut dyn chip8_traits::Timer).update();
         if let Err(error) = result {
             return Err(error);
         }
 
         // TODO: something seems broken that I can't do "use" and have to fully qualify or when that fails, cast
-        let result = (self.delay_timer.as_mut() as &mut dyn chip8_traits::Timer).update();
+        let result = (&mut self.delay_timer as &mut dyn chip8_traits::Timer).update();
         if let Err(error) = result {
             return Err(error);
         }
@@ -213,11 +214,11 @@ where Renderer: chip8_traits::Renderer,
     }
 
     fn clear_screen(&mut self) {
-        (self.screen_memory.as_mut() as &mut dyn chip8_traits::ScreenMemory).clear();
+        (&mut self.screen_memory as &mut dyn chip8_traits::ScreenMemory).clear();
     }
 
     fn dump_memory(&self) -> Vec<u8> {
-        chip8_traits::Memory::dump(self.memory.as_ref())
+        chip8_traits::Memory::dump(&self.memory)
     }
 }
 
@@ -280,15 +281,15 @@ where Renderer: chip8_traits::Renderer,
                     false,
                     instruction, 
                     &mut self.program_counter, 
-                    self.stack.as_mut(), 
-                    self.memory.as_mut(),
-                    self.screen_memory.as_mut(),
+                    &mut self.stack, 
+                    &mut self.memory,
+                    &mut self.screen_memory,
                     &mut self.variable_registers,
-                    self.keypad.as_mut(),
+                    &mut self.keypad,
                     &mut self.index_register,
-                    self.delay_timer.as_mut(),
-                    self.sound_timer.as_mut(),
-                    self.random.as_mut(),
+                    &mut self.delay_timer,
+                    &mut self.sound_timer,
+                    &mut self.random,
                     self.font_start
                 ) {
                     Ok(result) => { disassembly = result.instruction_disassembly; },
