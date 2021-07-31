@@ -100,6 +100,5 @@ impl<Instruction: chip8_traits::Instruction> fmt::Display for InstructionError<I
             InstructionError::InstructionExecuteError(instruction) => write!(f, "Issue when executing instruction '{}'", instruction),
             InstructionError::UnsupportedInstructionError(instruction) => write!(f, "Unsupported instruction '{}'", instruction)
         }
-        
     }
 }

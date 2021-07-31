@@ -1,8 +1,8 @@
-use std::{borrow::Borrow, fs, usize};
+use std::{borrow::{BorrowMut}, fs, usize};
 
 use chip8_traits::{ProgramCounter, Timer};
 
-use crate::{DelayTimer, Instruction, SoundTimer, cpu::execute};
+use crate::{DelayTimer, Instruction, SoundTimer, bus::Bus, cpu::execute};
 
 
 pub struct Interpreter<Renderer, Keypad, Random> 
@@ -81,6 +81,36 @@ where Renderer: chip8_traits::Renderer,
     
             random,
 
+        }
+    }
+
+    pub fn new_crate_defaults(renderer: Box<Renderer>, keypad: Box<Keypad>, random: Box<Random>) -> Interpreter<Renderer, Keypad, Random> {
+        Interpreter::new(
+             Box::new(crate::Memory::new(4096)),
+             Box::new(crate::ScreenMemory::new(64, 32)),
+            renderer,
+            Box::new(crate::Stack::new()),
+            Box::new(crate::DelayTimer::new()),
+            Box::new(crate::SoundTimer::new()),
+            keypad,
+            crate::ProgramCounter::new(),
+            random,
+            crate::Font::new()
+        )
+    }
+
+    pub fn create_bus<'bus>(&'bus mut self) -> Bus<'bus, Keypad, Random> {
+        Bus {
+            program_counter: &mut self.program_counter,
+            stack: self.stack.borrow_mut(),
+            memory: self.memory.borrow_mut(),
+            screen_memory: self.screen_memory.borrow_mut(),
+            variable_registers: self.variable_registers.borrow_mut(),
+            keypad: self.keypad.borrow_mut(),
+            index_register: self.index_register.borrow_mut(),
+            delay_timer: self.delay_timer.borrow_mut(),
+            sound_timer: self.sound_timer.borrow_mut(),
+            random: self.random.borrow_mut()
         }
     }
 

@@ -23,5 +23,6 @@ pub mod stack;
 pub use self::stack::Stack;
 pub mod variable_registers;
 pub use self::variable_registers::VariableRegisters;
+pub mod bus;
 
 #[macro_use] extern crate guard;

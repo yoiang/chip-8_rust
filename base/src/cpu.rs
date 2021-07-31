@@ -8,8 +8,7 @@ pub type ExecuteResult<Instruction> = std::result::Result<ExecutionState, Instru
 
 /// Execute an instruction, or interpret the instruction if apply_instruction == false
 pub fn execute<
-    Instruction: chip8_traits::Instruction, 
-    ProgramCounter: chip8_traits::ProgramCounter,
+    Instruction: chip8_traits::Instruction,
     Keypad: chip8_traits::Keypad, 
     Random: chip8_traits::Random
 > (
@@ -93,8 +92,7 @@ pub fn execute<
 
 /// Skip if value in VX is equal to NN
 fn skip_if_equal_value<
-    Instruction: chip8_traits::Instruction,
-    ProgramCounter: chip8_traits::ProgramCounter
+    Instruction: chip8_traits::Instruction
 >(
     apply_instruction: bool,
     instruction: Instruction,
@@ -108,7 +106,7 @@ fn skip_if_equal_value<
         match variable_registers.get(x) {
             Some(register_value) => {
                 if value == register_value {
-                    program_counter.skip();
+                    (program_counter as &mut dyn chip8_traits::ProgramCounter).skip();
                 }
             },
             None => return Err(InstructionError::InstructionExecuteError(instruction)),
@@ -122,8 +120,7 @@ fn skip_if_equal_value<
 
 /// Skip if value in VX is not equal to NN
 fn skip_if_not_equal_to_value<
-    Instruction: chip8_traits::Instruction,
-    ProgramCounter: chip8_traits::ProgramCounter
+    Instruction: chip8_traits::Instruction
 >(
     apply_instruction: bool,
     instruction: Instruction,
@@ -137,7 +134,7 @@ fn skip_if_not_equal_to_value<
         match variable_registers.get(x) {
             Some(register_value) => {
                 if value != register_value {
-                    program_counter.skip();
+                    (program_counter as &mut dyn chip8_traits::ProgramCounter).skip();
                 }
             },
             None => return Err(InstructionError::InstructionExecuteError(instruction)),
@@ -150,15 +147,13 @@ fn skip_if_not_equal_to_value<
 }
 
 fn skip_if_equal<
-    Instruction: chip8_traits::Instruction,
-    ProgramCounter: chip8_traits::ProgramCounter
+    Instruction: chip8_traits::Instruction
 >(
     apply_instruction: bool,
     instruction: Instruction,
     variable_registers: &mut VariableRegisters,
     program_counter: &mut ProgramCounter
 ) -> ExecuteResult<Instruction> {
-    let count = count8(instruction.w().to_vec());
     let x = count8(instruction.x().to_vec());
     let y = count8(instruction.y().to_vec());
 
@@ -168,7 +163,7 @@ fn skip_if_equal<
                 match variable_registers.get(y) {
                     Some(y_value) => {
                         if x_value == y_value {
-                            program_counter.skip();
+                            (program_counter as &mut dyn chip8_traits::ProgramCounter).skip();
                         }
                         
                     },
@@ -185,15 +180,13 @@ fn skip_if_equal<
 }
 
 fn skip_if_not_equal<
-    Instruction: chip8_traits::Instruction,
-    ProgramCounter: chip8_traits::ProgramCounter
+    Instruction: chip8_traits::Instruction
 >(
     apply_instruction: bool,
     instruction: Instruction,
     variable_registers: &mut VariableRegisters,
     program_counter: &mut ProgramCounter
 ) -> ExecuteResult<Instruction> {
-    let count = count8(instruction.w().to_vec());
     let x = count8(instruction.x().to_vec());
     let y = count8(instruction.y().to_vec());
 
@@ -203,7 +196,7 @@ fn skip_if_not_equal<
                 match variable_registers.get(y) {
                     Some(y_value) => {
                         if x_value != y_value {
-                            program_counter.skip();
+                            (program_counter as &mut dyn chip8_traits::ProgramCounter).skip();
                         }
                         
                     },
@@ -236,14 +229,13 @@ fn clear_screen<
 /// Pushes the location after the "Push Stack" instruction into the stack and sets the program counter to the location NNN 
 fn push_stack<
     Instruction: chip8_traits::Instruction,
-    Stack: chip8_traits::Stack,
-    ProgramCounter: chip8_traits::ProgramCounter
+    Stack: chip8_traits::Stack
 > (apply_instruction: bool, instruction: Instruction, stack: &mut Stack, program_counter: &mut ProgramCounter) -> ExecuteResult<Instruction> {
     let new_position = count16(instruction.nnn().to_vec());
 
     if apply_instruction {
-        stack.push(program_counter.get_position());
-        program_counter.set_position(new_position as usize);
+        stack.push((program_counter as &mut dyn chip8_traits::ProgramCounter).get_position());
+        (program_counter as &mut dyn chip8_traits::ProgramCounter).set_position(new_position as usize);
     }
 
     Ok(ExecutionState {
@@ -254,14 +246,13 @@ fn push_stack<
 /// Sets the program counter to the location on the top of the stack and removes it from the stack
 fn pop_stack<
     Instruction: chip8_traits::Instruction,
-    Stack: chip8_traits::Stack,
-    ProgramCounter: chip8_traits::ProgramCounter
+    Stack: chip8_traits::Stack
 > (apply_instruction: bool, instruction: Instruction, stack: &mut Stack, program_counter: &mut ProgramCounter) -> ExecuteResult<Instruction> {
     if apply_instruction {
         let result = stack.pop();
         match result {
             Some(value) => {
-                program_counter.set_position(value);
+                (program_counter as &mut dyn chip8_traits::ProgramCounter).set_position(value);
             }
             None => return Err(InstructionError::InstructionExecuteError(instruction))
         }
@@ -275,12 +266,11 @@ fn pop_stack<
 /// Set program counter to NNN
 fn jump<
     Instruction: chip8_traits::Instruction, 
-    ProgramCounter: chip8_traits::ProgramCounter
 >(apply_instruction: bool, instruction: Instruction, program_counter: &mut ProgramCounter) -> ExecuteResult<Instruction>  
 {
     let nnn = count16(instruction.nnn().to_vec());
     if apply_instruction {
-        program_counter.set_position(nnn as usize);
+        (program_counter as &mut dyn chip8_traits::ProgramCounter).set_position(nnn as usize);
     }
 
     Ok(ExecutionState {
@@ -657,8 +647,7 @@ fn set_index_register<
 }
 
 fn jump_v0<
-    Instruction: chip8_traits::Instruction,
-    ProgramCounter: chip8_traits::ProgramCounter
+    Instruction: chip8_traits::Instruction
 >(apply_instruction: bool, instruction: Instruction, program_counter: &mut ProgramCounter, variable_registers: &VariableRegisters) -> ExecuteResult<Instruction> {
     let value = count16(chip8_traits::Instruction::nnn(&instruction).to_vec());
 
@@ -667,7 +656,7 @@ fn jump_v0<
             return Err(InstructionError::InstructionExecuteError(instruction));
         });
     
-        program_counter.set_position(value as usize + x_value as usize);
+        (program_counter as &mut dyn chip8_traits::ProgramCounter).set_position(value as usize + x_value as usize);
     }
 
     Ok(ExecutionState {
@@ -738,7 +727,6 @@ fn display<
 fn skip_if_pressed<
     Instruction: chip8_traits::Instruction,
     Keypad: chip8_traits::Keypad, 
-    ProgramCounter: chip8_traits::ProgramCounter
 >(
     apply_instruction: bool, 
     instruction: Instruction, 
@@ -754,7 +742,7 @@ fn skip_if_pressed<
         });
     
         if keypad.key_state(x_value as usize) {
-            program_counter.skip();
+            (program_counter as &mut dyn chip8_traits::ProgramCounter).skip();
         }
     }
 
@@ -766,7 +754,6 @@ fn skip_if_pressed<
 fn skip_if_not_pressed<
     Instruction: chip8_traits::Instruction,
     Keypad: chip8_traits::Keypad, 
-    ProgramCounter: chip8_traits::ProgramCounter
 >(
     apply_instruction: bool, 
     instruction: Instruction, 
@@ -782,7 +769,7 @@ fn skip_if_not_pressed<
         });
     
         if keypad.key_state(x_value as usize) == false {
-            program_counter.skip();
+            (program_counter as &mut dyn chip8_traits::ProgramCounter).skip();
         }    
     }
 
@@ -859,8 +846,7 @@ fn add_to_index<
 }
 
 fn wait_for_key<
-    Instruction: chip8_traits::Instruction,
-    ProgramCounter: chip8_traits::ProgramCounter
+    Instruction: chip8_traits::Instruction
 >(apply_instruction: bool, instruction: Instruction, keypad: &dyn chip8_traits::Keypad, variable_registers: &mut VariableRegisters, program_counter: &mut ProgramCounter) -> ExecuteResult<Instruction> {
     let x = count8(instruction.x().to_vec());
 
@@ -881,7 +867,7 @@ fn wait_for_key<
         }
 
         if !key_down {
-            program_counter.go_back();
+            (program_counter as &mut dyn chip8_traits::ProgramCounter).go_back();
         }
     }
 
